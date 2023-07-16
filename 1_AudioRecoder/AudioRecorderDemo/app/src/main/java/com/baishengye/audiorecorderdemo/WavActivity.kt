@@ -1,0 +1,185 @@
+package com.baishengye.audiorecorderdemo
+
+import android.annotation.SuppressLint
+import android.os.Build
+import android.text.TextUtils
+import android.util.Log
+import android.view.View
+import com.baishengye.audiorecorderdemo.databinding.ActivityWavBinding
+import com.baishengye.audiorecorderdemo.databinding.ItemAudioFileBinding
+import com.baishengye.libaudio.config.AudioRecordConfig
+import com.baishengye.libaudio.config.MediaPlayState.*
+import com.baishengye.libaudio.helper.WaveFileInfoHelper
+import com.baishengye.libaudio.player.MediaPlayHelper
+import com.baishengye.libaudio.recorder.PullTransport
+import com.baishengye.libaudio.recorder.Recorder
+import com.baishengye.libaudio.recorder.RecorderCreator
+import com.baishengye.libbase.base.BaseViewBindingActivity
+import com.baishengye.libutil.utils.DateUtil
+import com.baishengye.libutil.utils.DateUtil.formatTime
+import com.baishengye.libutil.utils.FolderUtils
+import com.drake.brv.utils.linear
+import com.drake.brv.utils.setup
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.nio.file.Path
+import java.util.*
+
+class WavActivity : BaseViewBindingActivity<ActivityWavBinding>() {
+    private var wavRecorder: Recorder?= null
+    private val wavPlayer: MediaPlayHelper = MediaPlayHelper()
+
+    private var wavDirPath:String ?= null
+    private var recordFile: File?= null
+    private var wavFilesName : MutableList<String> = mutableListOf()
+
+    override fun getViewBinding(): ActivityWavBinding = ActivityWavBinding.inflate(layoutInflater)
+
+    override fun initViews() {
+
+        binding.rvAudioList.linear().setup {
+            addType<String>(R.layout.item_audio_file)
+
+            onBind {
+                val binding = getBinding<ItemAudioFileBinding>()
+                binding.tvAudio.text = getModel<String>()
+            }
+
+            onClick(R.id.flAudio){
+                val fileName = getModel<String>()
+
+                startPlay(fileName)
+            }
+        }.models = wavFilesName
+    }
+
+    private fun startPlay(fileName: String) {
+        // 在协程中执行异步任务
+        CoroutineScope(Dispatchers.Main).launch {
+            var result:String?=null
+            withContext(Dispatchers.IO) {
+                result = getWavInfo(wavDirPath + fileName)
+            }
+
+            binding.tvWavInfo.text = result
+        }
+
+        wavPlayer.let { mediaPlayHelper ->
+            mediaPlayHelper.setOnPlayStateChange {mediaPlayState ->
+                when(mediaPlayState){
+                    STOP -> binding.llPlayer.visibility = View.GONE
+                    PAUSE -> binding.tvPlay.text = "播放"
+                    IDLE -> binding.llPlayer.visibility = View.VISIBLE
+                    PLAYING -> {
+                        binding.sbBar.max = mediaPlayHelper.getDur()
+                        binding.tvRightTime.text = formatTime(mediaPlayHelper.getDur())
+                        binding.tvPlay.text = "暂停"
+                    }
+                }
+            }
+            mediaPlayHelper.startPlaying(wavDirPath + fileName)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                binding.sbBar.min = 0
+            }
+            binding.sbBar.progress = 0
+
+            //----------定时器记录播放进度---------//
+            val mTimerTask: TimerTask = object : TimerTask() {
+                override fun run() {
+                    this@WavActivity.runOnUiThread {
+                        if(mediaPlayHelper.isPlaying()){
+                            binding.sbBar.progress = mediaPlayHelper.getCurrPos()
+                            binding.tvLeftTime.text = formatTime(mediaPlayHelper.getCurrPos())
+                        }
+                    }
+                }
+            }
+            Timer().schedule(mTimerTask, 0, 1000)
+        }
+    }
+
+    override fun initData() {
+        wavDirPath = FolderUtils.getAudioFolderPath(this)
+        Log.d("TEST","pcmDirPath:${wavDirPath}")
+    }
+
+    @SuppressLint("MissingPermission", "NotifyDataSetChanged")
+    override fun initListeners() {
+        binding.tvPlay.setOnClickListener{
+            if(wavPlayer.isPlaying()){
+                wavPlayer.pausePlaying()
+            }else{
+                wavPlayer.resumePlaying()
+            }
+        }
+
+        binding.tvCancel.setOnClickListener {
+            if(wavPlayer.isPlaying()||wavPlayer.isPaused()){
+                wavPlayer.stopPlaying()
+            }
+        }
+
+        binding.btnWavRecordStartStop.setOnClickListener {
+            if(binding.btnWavRecordStartStop.text=="开始录音"&&!TextUtils.isEmpty(wavDirPath)){
+                binding.btnWavRecordStartStop.text = "停止录音"
+                binding.btnWavRecordPauseResume.text = "暂停"
+                binding.btnWavRecordPauseResume.visibility = View.VISIBLE
+
+                recordFile = File(wavDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.wav")
+                wavRecorder = RecorderCreator.wav(recordFile!!, AudioRecordConfig(), PullTransport.Default())
+                wavRecorder?.startRecording()
+
+            }else if(!TextUtils.isEmpty(wavDirPath)){
+                binding.btnWavRecordStartStop.text = "开始录音"
+                binding.btnWavRecordPauseResume.visibility = View.GONE
+
+                wavRecorder?.stopRecording()
+                recordFile = null
+                wavRecorder = null
+            }
+        }
+
+        binding.btnWavRecordPauseResume.setOnClickListener {
+            if(binding.btnWavRecordPauseResume.text=="暂停"&&!TextUtils.isEmpty(wavDirPath)){
+                binding.btnWavRecordPauseResume.text = "继续"
+
+                wavRecorder?.pauseRecording()
+
+            }else if(!TextUtils.isEmpty(wavDirPath)){
+                binding.btnWavRecordPauseResume.text = "暂停"
+
+                wavRecorder?.resumeRecording()
+            }
+        }
+
+        binding.btnWavRefreshAudio.setOnClickListener {
+            // 在协程中执行异步任务
+            CoroutineScope(Dispatchers.Main).launch {
+                val result = withContext(Dispatchers.IO) {
+                    wavFilesName.clear()
+                    // 在 IO 线程执行耗时操作，例如网络请求或数据库查询
+                    wavFilesName.addAll(getAllPcmFiles(wavDirPath!!,".wav"))
+                }
+
+                binding.rvAudioList.adapter?.notifyDataSetChanged()
+            }
+        }
+    }
+
+    private fun getWavInfo(filePath: String):String {
+        val filename = filePath
+        val reader = WaveFileInfoHelper(filename)
+        return if (reader.isSuccess) {
+            ("读取wav文件信息：" + filename
+                    + "\n采样率：" + reader.sampleRate
+                    + "\n声道数：" + reader.numChannels
+                    + "\n编码长度：" + reader.bitPerSample
+                    + "\n数据长度：" + reader.dataLen)
+        } else {
+            "不是一个正常的wav文件"
+        }
+    }
+}
