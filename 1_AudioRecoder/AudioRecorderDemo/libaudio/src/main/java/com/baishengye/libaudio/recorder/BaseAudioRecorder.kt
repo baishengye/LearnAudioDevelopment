@@ -43,16 +43,20 @@ open class BaseDataRecorder @RequiresPermission(Manifest.permission.RECORD_AUDIO
             //根据采样数计算新的缓冲区,使缓冲区大小除以每个样本所占字节数为正数，并每帧的样本数整除
             //假设：buffSizeInBytes = 1700
             //config.audioEncodingFormat.bytesPreSimple = 2
-            //config.simplePreFrame = 160
-            var simpleSize = (bufferSizeInBytes / config.audioEncodingFormat.bytesPreSimple)//1700/2=850
-            if(simpleSize%config.simplePreFrame!=0){//850/160=5余50
-                simpleSize += (config.simplePreFrame - simpleSize%config.simplePreFrame)//850+160-50=960，960/160=6,可以除尽
+            //config.simplePreNotify = 160
+            var simpleSize =
+                (bufferSizeInBytes / config.audioEncodingFormat.bytesPreSimple)//1700/2=850
+            if (simpleSize % config.simplePreNotify != 0) {//850/160=5余50
+                simpleSize += (config.simplePreNotify - simpleSize % config.simplePreNotify)//850+160-50=960，960/160=6,可以除尽
                 bufferSizeInBytes = simpleSize * config.audioEncodingFormat.bytesPreSimple//
             }
 
             audioRecord = AudioRecord(
-                config.audioSource, config.sampleRateInHz,
-                config.audioEncodingFormat.channelConfig, config.audioEncodingFormat.audioFormat, bufferSizeInBytes
+                config.audioSource,
+                config.sampleRateInHz,
+                config.audioEncodingFormat.channelConfig,
+                config.audioEncodingFormat.audioFormat,
+                bufferSizeInBytes
             )
 
             if (audioRecord!!.state != AudioRecord.STATE_INITIALIZED) {

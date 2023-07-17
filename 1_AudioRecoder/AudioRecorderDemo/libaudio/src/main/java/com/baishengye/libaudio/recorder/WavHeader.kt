@@ -1,6 +1,5 @@
 package com.baishengye.libaudio.recorder
 
-import android.media.AudioFormat
 import com.baishengye.libaudio.config.AudioRecordConfig
 
 /**
@@ -15,15 +14,14 @@ class WavHeader internal constructor(// wav录音配置参数
      */
     fun toBytes(): ByteArray {
         val sampleRateInHz = config.sampleRateInHz.toLong()
-        val channels = if (config.audioEncodingFormat.channelConfig == AudioFormat.CHANNEL_IN_MONO) 1 else 2
         val bytesPerSample: Byte = config.bytesPerSample()
         return wavFileHeader(
             totalAudioLength - 44,
             totalAudioLength - 8,
             sampleRateInHz,
-            channels,
-            bytesPerSample * sampleRateInHz * channels,
-            (bytesPerSample*8).toByte()
+            config.channels(),
+            bytesPerSample * sampleRateInHz,
+            config.bitsPreChannel()
         )
     }
 
@@ -35,12 +33,12 @@ class WavHeader internal constructor(// wav录音配置参数
      * @param longSampleRate - 采样率
      * @param channels       - 通道数
      * @param byteRate       - 每秒数据字节数
-     * @param bitsPerSample  - 采样位数，16/8 bit
+     * @param bitsPerChannel  - 采样时每个通道所占位数
      * @return 文件头
      */
     private fun wavFileHeader(
         totalAudioLen: Long, totalDataLen: Long, longSampleRate: Long,
-        channels: Int, byteRate: Long, bitsPerSample: Byte
+        channels: Int, byteRate: Long, bitsPerChannel: Byte
     ): ByteArray {
         val header = ByteArray(44)
         // --- RIFF区块 ---
@@ -82,16 +80,16 @@ class WavHeader internal constructor(// wav录音配置参数
         header[25] = (longSampleRate shr 8 and 0xffL).toByte()
         header[26] = (longSampleRate shr 16 and 0xffL).toByte()
         header[27] = (longSampleRate shr 24 and 0xffL).toByte()
-        // ByteRate(数据传输速率): 每秒数据字节数，该数值为:声道数×采样频率×采样位数/8。
+        // ByteRate(数据传输速率): 每秒数据字节数，该数值为:声道数×采样率×采样位数/8。
         header[28] = (byteRate and 0xffL).toByte()
         header[29] = (byteRate shr 8 and 0xffL).toByte()
         header[30] = (byteRate shr 16 and 0xffL).toByte()
         header[31] = (byteRate shr 24 and 0xffL).toByte()
         // BlockAlign(数据块对齐): 采样帧大小。该数值为:声道数×采样位数/8。
-        header[32] = (channels * (bitsPerSample / 8)).toByte()
+        header[32] = (channels * (bitsPerChannel / 8)).toByte()
         header[33] = 0
         // BitsPerSample(采样位数): 每个采样存储的bit数。常见的位数有 8、16、32
-        header[34] = bitsPerSample
+        header[34] = bitsPerChannel
         header[35] = 0
 
         // --- DATA区块 ---

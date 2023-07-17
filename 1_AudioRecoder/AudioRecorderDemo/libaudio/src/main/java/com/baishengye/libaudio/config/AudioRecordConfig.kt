@@ -1,5 +1,6 @@
 package com.baishengye.libaudio.config
 
+import android.media.AudioFormat
 import android.media.MediaRecorder
 
 data class AudioRecordConfig(
@@ -18,12 +19,31 @@ data class AudioRecordConfig(
      * 编码格式
      * - [AudioEncodingFormat]
      * */
-    var audioEncodingFormat: AudioEncodingFormat = AudioEncodingFormat.PCM_16BIT_MONO,
+    var audioEncodingFormat: AudioEncodingFormat = AudioEncodingFormat.PCM_16BIT_STEREO,
     /**
-     * 帧数:每多少帧进行多少次采样*/
-    var simplePreFrame:Int = 160
-){
+     * 帧数:每采160次样本通知将数据编码设置的音频格式*/
+    var simplePreNotify: Int = 160
+) {
+    /**
+     * 每次采样占用多少字节
+     * 计算方式: 音频编码(每个声道占用字节数1或2Byte)*声道数*/
     fun bytesPerSample(): Byte {
         return audioEncodingFormat.bytesPreSimple
+    }
+
+    /**
+     * 音频编码对应的bit数,可以理解成每个音道所占bit数*/
+    fun bitsPreChannel(): Byte {
+        return if (audioEncodingFormat.audioFormat == AudioFormat.ENCODING_PCM_8BIT) {
+            8
+        } else {
+            16
+        }
+    }
+
+    /**
+     * 声道数*/
+    fun channels(): Int {
+        return if (audioEncodingFormat.channelConfig == AudioFormat.CHANNEL_IN_MONO) 1 else 2
     }
 }

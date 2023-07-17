@@ -6,7 +6,11 @@ import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+/**
+ * 音频格式转化*/
 object AudioFormatConvertHelper {
+    /**
+     * Wav转化成PCM*/
     fun convertWavToPcm(wavFilePath: String, pcmFilePath: String) {
         val wavFile = File(wavFilePath)
         val pcmFile = File(pcmFilePath)
