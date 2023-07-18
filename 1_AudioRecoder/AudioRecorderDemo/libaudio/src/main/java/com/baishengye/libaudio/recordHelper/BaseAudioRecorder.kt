@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.recorder
+package com.baishengye.libaudio.recordHelper
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -17,14 +17,14 @@ import java.util.concurrent.Executors
 /**
  * 录音机基类
  */
-open class BaseDataRecorder @RequiresPermission(Manifest.permission.RECORD_AUDIO) protected constructor(
+open class BaseAudioRecorder @RequiresPermission(Manifest.permission.RECORD_AUDIO) protected constructor(
     protected val file: File,
     protected val config: AudioRecordConfig,
     protected val pullTransport: PullTransport
-) : Recorder {
+) : RecordHelper {
 
     protected var bufferSizeInBytes: Int = 0 // 缓冲区大小
-    protected var recordState:MediaRecordState = MediaRecordState.IDLE
+    protected var recordState: MediaRecordState = MediaRecordState.IDLE
 
     private var audioRecord: AudioRecord? = null
     private var outputStream: OutputStream? = null

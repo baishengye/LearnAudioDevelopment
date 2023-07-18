@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.recorder
+package com.baishengye.libaudio.recordHelper
 
 import android.Manifest
 import androidx.annotation.RequiresPermission
@@ -11,7 +11,7 @@ import java.io.RandomAccessFile
 /**
  * Wav格式的音频记录器
  */
-class WavRecorder
+class WavRecordHelper
 /**
  * 构造方法
  *
@@ -23,7 +23,7 @@ class WavRecorder
     file: File,
     config: AudioRecordConfig,
     pullTransport: PullTransport
-) : BaseDataRecorder(
+) : BaseAudioRecorder(
     file, config, pullTransport
 ) {
     override fun stopRecording() {

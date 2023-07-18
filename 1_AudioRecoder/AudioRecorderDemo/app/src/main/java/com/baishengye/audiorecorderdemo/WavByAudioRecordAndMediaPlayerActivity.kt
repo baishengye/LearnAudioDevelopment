@@ -10,10 +10,10 @@ import com.baishengye.audiorecorderdemo.databinding.ItemAudioFileBinding
 import com.baishengye.libaudio.config.AudioRecordConfig
 import com.baishengye.libaudio.config.MediaPlayState.*
 import com.baishengye.libaudio.helper.WaveFileInfoHelper
-import com.baishengye.libaudio.player.MediaPlayHelper
-import com.baishengye.libaudio.recorder.PullTransport
-import com.baishengye.libaudio.recorder.Recorder
-import com.baishengye.libaudio.recorder.RecorderCreator
+import com.baishengye.libaudio.playhelper.MediaPlayHelper
+import com.baishengye.libaudio.recordHelper.PullTransport
+import com.baishengye.libaudio.recordHelper.RecordHelper
+import com.baishengye.libaudio.recordHelper.RecordHelperCreator
 import com.baishengye.libbase.base.BaseViewBindingActivity
 import com.baishengye.libutil.utils.DateUtil
 import com.baishengye.libutil.utils.DateUtil.formatTime
@@ -25,16 +25,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.nio.file.Path
 import java.util.*
 
-class WavActivity : BaseViewBindingActivity<ActivityWavBinding>() {
-    private var wavRecorder: Recorder?= null
-    private val wavPlayer: MediaPlayHelper = MediaPlayHelper()
+class WavByAudioRecordAndMediaPlayerActivity : BaseViewBindingActivity<ActivityWavBinding>() {
+    private var wavRecordHelper: RecordHelper? = null
+    private val wavPlayHelper: MediaPlayHelper = MediaPlayHelper()
 
-    private var wavDirPath:String ?= null
-    private var recordFile: File?= null
-    private var wavFilesName : MutableList<String> = mutableListOf()
+    private var wavDirPath: String? = null
+    private var recordFile: File? = null
+    private var wavFilesName: MutableList<String> = mutableListOf()
 
     override fun getViewBinding(): ActivityWavBinding = ActivityWavBinding.inflate(layoutInflater)
 
@@ -67,9 +66,9 @@ class WavActivity : BaseViewBindingActivity<ActivityWavBinding>() {
             binding.tvWavInfo.text = result
         }
 
-        wavPlayer.let { mediaPlayHelper ->
-            mediaPlayHelper.setOnPlayStateChange {mediaPlayState ->
-                when(mediaPlayState){
+        wavPlayHelper.let { mediaPlayHelper ->
+            mediaPlayHelper.setOnPlayStateChange { mediaPlayState ->
+                when (mediaPlayState) {
                     STOP -> binding.llPlayer.visibility = View.GONE
                     PAUSE -> binding.tvPlay.text = "播放"
                     IDLE -> binding.llPlayer.visibility = View.VISIBLE
@@ -89,8 +88,8 @@ class WavActivity : BaseViewBindingActivity<ActivityWavBinding>() {
             //----------定时器记录播放进度---------//
             val mTimerTask: TimerTask = object : TimerTask() {
                 override fun run() {
-                    this@WavActivity.runOnUiThread {
-                        if(mediaPlayHelper.isPlaying()){
+                    this@WavByAudioRecordAndMediaPlayerActivity.runOnUiThread {
+                        if (mediaPlayHelper.isPlaying()) {
                             binding.sbBar.progress = mediaPlayHelper.getCurrPos()
                             binding.tvLeftTime.text = formatTime(mediaPlayHelper.getCurrPos())
                         }
@@ -108,37 +107,42 @@ class WavActivity : BaseViewBindingActivity<ActivityWavBinding>() {
 
     @SuppressLint("MissingPermission", "NotifyDataSetChanged")
     override fun initListeners() {
-        binding.tvPlay.setOnClickListener{
-            if(wavPlayer.isPlaying()){
-                wavPlayer.pausePlaying()
-            }else{
-                wavPlayer.resumePlaying()
+        binding.tvPlay.setOnClickListener {
+            if (wavPlayHelper.isPlaying()) {
+                wavPlayHelper.pausePlaying()
+            } else {
+                wavPlayHelper.resumePlaying()
             }
         }
 
         binding.tvCancel.setOnClickListener {
-            if(wavPlayer.isPlaying()||wavPlayer.isPaused()){
-                wavPlayer.stopPlaying()
+            if (wavPlayHelper.isPlaying() || wavPlayHelper.isPaused()) {
+                wavPlayHelper.stopPlaying()
             }
         }
 
         binding.btnWavRecordStartStop.setOnClickListener {
-            if(binding.btnWavRecordStartStop.text=="开始录音"&&!TextUtils.isEmpty(wavDirPath)){
+            if(binding.btnWavRecordStartStop.text=="开始录音"&&!TextUtils.isEmpty(wavDirPath)) {
                 binding.btnWavRecordStartStop.text = "停止录音"
                 binding.btnWavRecordPauseResume.text = "暂停"
                 binding.btnWavRecordPauseResume.visibility = View.VISIBLE
 
-                recordFile = File(wavDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.wav")
-                wavRecorder = RecorderCreator.wav(recordFile!!, AudioRecordConfig(), PullTransport.Default())
-                wavRecorder?.startRecording()
+                recordFile =
+                    File(wavDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.wav")
+                wavRecordHelper = RecordHelperCreator.wav(
+                    recordFile!!,
+                    AudioRecordConfig(),
+                    PullTransport.Default()
+                )
+                wavRecordHelper?.startRecording()
 
             }else if(!TextUtils.isEmpty(wavDirPath)){
                 binding.btnWavRecordStartStop.text = "开始录音"
                 binding.btnWavRecordPauseResume.visibility = View.GONE
 
-                wavRecorder?.stopRecording()
+                wavRecordHelper?.stopRecording()
                 recordFile = null
-                wavRecorder = null
+                wavRecordHelper = null
             }
         }
 
@@ -146,12 +150,12 @@ class WavActivity : BaseViewBindingActivity<ActivityWavBinding>() {
             if(binding.btnWavRecordPauseResume.text=="暂停"&&!TextUtils.isEmpty(wavDirPath)){
                 binding.btnWavRecordPauseResume.text = "继续"
 
-                wavRecorder?.pauseRecording()
+                wavRecordHelper?.pauseRecording()
 
             }else if(!TextUtils.isEmpty(wavDirPath)){
                 binding.btnWavRecordPauseResume.text = "暂停"
 
-                wavRecorder?.resumeRecording()
+                wavRecordHelper?.resumeRecording()
             }
         }
 

@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.recorder;
+package com.baishengye.libaudio.recordHelper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.player
+package com.baishengye.libaudio.playhelper
 
 interface PlayHelper {
     /**

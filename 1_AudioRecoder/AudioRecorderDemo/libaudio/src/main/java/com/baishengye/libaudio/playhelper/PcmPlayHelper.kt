@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.player
+package com.baishengye.libaudio.playhelper
 
 import android.media.AudioFormat
 import android.media.AudioManager

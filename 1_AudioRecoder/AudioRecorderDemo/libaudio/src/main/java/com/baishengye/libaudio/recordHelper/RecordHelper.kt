@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.recorder
+package com.baishengye.libaudio.recordHelper
 
 /**
  * 录音机接口
@@ -11,7 +11,7 @@ package com.baishengye.libaudio.recorder
  *
  * @author baishengye
  */
-interface Recorder {
+interface RecordHelper {
     /**
      * 开始，请确保当前app有 RECORD_AUDIO 权限
      */

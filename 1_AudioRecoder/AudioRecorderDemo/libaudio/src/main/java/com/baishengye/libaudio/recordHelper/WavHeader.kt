@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.recorder
+package com.baishengye.libaudio.recordHelper
 
 import com.baishengye.libaudio.config.AudioRecordConfig
 
@@ -21,7 +21,7 @@ class WavHeader internal constructor(// wav录音配置参数
             sampleRateInHz,
             config.channels(),
             bytesPerSample * sampleRateInHz,
-            config.bitsPreChannel()
+            (bytesPerSample / 8).toByte()
         )
     }
 
@@ -33,12 +33,12 @@ class WavHeader internal constructor(// wav录音配置参数
      * @param longSampleRate - 采样率
      * @param channels       - 通道数
      * @param byteRate       - 每秒数据字节数
-     * @param bitsPerChannel  - 采样时每个通道所占位数
+     * @param bitsPerSimple  - 每次采样(一帧)所占位数
      * @return 文件头
      */
     private fun wavFileHeader(
         totalAudioLen: Long, totalDataLen: Long, longSampleRate: Long,
-        channels: Int, byteRate: Long, bitsPerChannel: Byte
+        channels: Int, byteRate: Long, bitsPerSimple: Byte
     ): ByteArray {
         val header = ByteArray(44)
         // --- RIFF区块 ---
@@ -85,11 +85,11 @@ class WavHeader internal constructor(// wav录音配置参数
         header[29] = (byteRate shr 8 and 0xffL).toByte()
         header[30] = (byteRate shr 16 and 0xffL).toByte()
         header[31] = (byteRate shr 24 and 0xffL).toByte()
-        // BlockAlign(数据块对齐): 采样帧大小。该数值为:声道数×采样位数/8。
-        header[32] = (channels * (bitsPerChannel / 8)).toByte()
+        // BlockAlign(数据块对齐): 采样帧大小(一次采样)。该数值为:声道数×采样位数/8。
+        header[32] = bitsPerSimple
         header[33] = 0
         // BitsPerSample(采样位数): 每个采样存储的bit数。常见的位数有 8、16、32
-        header[34] = bitsPerChannel
+        header[34] = bitsPerSimple
         header[35] = 0
 
         // --- DATA区块 ---

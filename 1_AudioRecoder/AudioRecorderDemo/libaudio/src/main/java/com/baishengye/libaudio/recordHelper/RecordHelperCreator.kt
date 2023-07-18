@@ -1,11 +1,11 @@
-package com.baishengye.libaudio.recorder
+package com.baishengye.libaudio.recordHelper
 
 import android.Manifest
 import androidx.annotation.RequiresPermission
 import com.baishengye.libaudio.config.AudioRecordConfig
 import java.io.File
 
-object RecorderCreator {
+object RecordHelperCreator {
 
     /**
      * 获取 pcm 格式的音频记录器
@@ -17,8 +17,8 @@ object RecorderCreator {
      */
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     @Throws(IllegalArgumentException::class)
-    fun pcm(file: File, config: AudioRecordConfig, pullTransport: PullTransport): Recorder {
-        return PcmRecorder(file, config, pullTransport)
+    fun pcm(file: File, config: AudioRecordConfig, pullTransport: PullTransport): RecordHelper {
+        return PcmRecordHelper(file, config, pullTransport)
     }
 
     /**
@@ -31,7 +31,7 @@ object RecorderCreator {
      */
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     @Throws(IllegalArgumentException::class)
-    fun wav(file: File, config: AudioRecordConfig, pullTransport: PullTransport): Recorder {
-        return WavRecorder(file, config, pullTransport)
+    fun wav(file: File, config: AudioRecordConfig, pullTransport: PullTransport): RecordHelper {
+        return WavRecordHelper(file, config, pullTransport)
     }
 }

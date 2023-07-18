@@ -3,8 +3,6 @@ package com.baishengye.audiorecorderdemo
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.baishengye.audiorecorderdemo.databinding.ActivityMainBinding
@@ -38,10 +36,10 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
 
     override fun initListeners() {
         binding.btnPcm.setOnClickListener {
-            startActivity(Intent(this,PcmActivity::class.java))
+            startActivity(Intent(this, PcmByAudioRecordAndAudioTrackActivity::class.java))
         }
         binding.btnWav.setOnClickListener {
-            startActivity(Intent(this,WavActivity::class.java))
+            startActivity(Intent(this, WavByAudioRecordAndMediaPlayerActivity::class.java))
         }
     }
 
