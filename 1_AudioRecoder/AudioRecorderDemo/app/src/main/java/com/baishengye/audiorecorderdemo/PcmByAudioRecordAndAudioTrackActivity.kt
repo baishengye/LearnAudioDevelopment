@@ -120,7 +120,7 @@ class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWa
                 binding.btnWavRecordPauseResume.visibility = View.VISIBLE
 
                 recordFile =
-                    File(pcmDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.wav")
+                    File(pcmDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.pcm")
                 pcmRecordHelper = RecordHelperCreator.wav(
                     recordFile!!,
                     AudioEncodeConfig(),

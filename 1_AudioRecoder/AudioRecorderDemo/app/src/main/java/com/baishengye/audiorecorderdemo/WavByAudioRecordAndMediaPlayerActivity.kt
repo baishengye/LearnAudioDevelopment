@@ -180,7 +180,7 @@ class WavByAudioRecordAndMediaPlayerActivity : BaseViewBindingActivity<ActivityW
             ("读取wav文件信息：" + filename
                     + "\n采样率：" + reader.sampleRate
                     + "\n声道数：" + reader.numChannels
-                    + "\n编码长度：" + reader.bitPerSample
+                    + "\n编码长度：" + reader.bitPerChannel * reader.numChannels
                     + "\n数据长度：" + reader.dataLen)
         } else {
             "不是一个正常的wav文件"

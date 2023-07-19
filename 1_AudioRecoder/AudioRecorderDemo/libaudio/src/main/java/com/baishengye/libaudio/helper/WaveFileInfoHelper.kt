@@ -34,9 +34,9 @@ class WaveFileInfoHelper(filename: String) {
         private set
 
     /**
-     * 获取每个采样的编码长度，8bit或者16bit
+     * 获取每个声道的编码长度，8bit或者16bit
      */
-    var bitPerSample = 0
+    var bitPerChannel = 0
         private set
     private var fis: FileInputStream? = null
     private var bis: BufferedInputStream? = null
@@ -71,9 +71,9 @@ class WaveFileInfoHelper(filename: String) {
             numChannels = readInt() // NumChannels(声道数): 1：单声道，2：双声道/立体声
             sampleRate =
                 readLong() // SampleRate(采样率): 每个声道单位时间采样次数。常用的采样频率有 11025, 22050 和 44100 kHz。
-            val byteRate = readLong() // ByteRate(数据传输速率): 每秒数据字节数，该数值为:声道数×采样频率×采样位数/8。
-            val blockAlign = readInt() // BlockAlign(数据块对齐): 采样帧大小。该数值为:声道数×采样位数/8。
-            bitPerSample = readInt() // BitsPerSample(采样位数): 每个采样存储的bit数。常见的位数有 8、16
+            val byteRate = readLong() // ByteRate(数据传输速率): 每秒数据字节数，该数值为:声道数×采样频率×声道所占位数/8。
+            val blockAlign = readInt() // BlockAlign(数据块对齐): 采样帧大小。该数值为:采样位数/8,采样位数=声道数×声道所占位数/8。
+            bitPerChannel = readInt() // BitsPerChannel(声道所占位数): 每个声道存储的bit数。常见的位数有 8、16
 
             // --- DATA区块 ---
             val dataFlag = readString(4)
@@ -81,13 +81,13 @@ class WaveFileInfoHelper(filename: String) {
             val audioLength = readLong() // 音频数据长度: N = ByteRate * seconds
 
             // 读取数据
-            dataLen = (audioLength / (bitPerSample / 8) / numChannels).toInt()
+            dataLen = (audioLength / (bitPerChannel / 8) / numChannels).toInt()
             data = Array(numChannels) { IntArray(dataLen) }
             for (i in 0 until dataLen) {
                 for (n in 0 until numChannels) {
-                    if (bitPerSample == 8) {
+                    if (bitPerChannel == 8) {
                         data!![n][i] = bis!!.read()
-                    } else if (bitPerSample == 16) {
+                    } else if (bitPerChannel == 16) {
                         data!![n][i] = readInt()
                     }
                 }
