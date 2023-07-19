@@ -7,8 +7,8 @@ import android.util.Log
 import android.view.View
 import com.baishengye.audiorecorderdemo.databinding.ActivityWavBinding
 import com.baishengye.audiorecorderdemo.databinding.ItemAudioFileBinding
-import com.baishengye.libaudio.config.AudioRecordConfig
-import com.baishengye.libaudio.config.MediaPlayState.*
+import com.baishengye.libaudio.config.decode.MediaPlayState.*
+import com.baishengye.libaudio.config.encode.AudioEncodeConfig
 import com.baishengye.libaudio.helper.WaveFileInfoHelper
 import com.baishengye.libaudio.playhelper.MediaPlayHelper
 import com.baishengye.libaudio.recordHelper.PullTransport
@@ -131,7 +131,7 @@ class WavByAudioRecordAndMediaPlayerActivity : BaseViewBindingActivity<ActivityW
                     File(wavDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.wav")
                 wavRecordHelper = RecordHelperCreator.wav(
                     recordFile!!,
-                    AudioRecordConfig(),
+                    AudioEncodeConfig(),
                     PullTransport.Default()
                 )
                 wavRecordHelper?.startRecording()

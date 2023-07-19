@@ -3,6 +3,7 @@ package com.baishengye.libaudio.recordHelper
 import android.media.AudioRecord
 import android.os.Handler
 import android.os.Looper
+import com.baishengye.libaudio.config.AudioChunk
 import com.baishengye.libaudio.recordHelper.PullTransport.OnAudioChunkPulledListener
 import java.io.IOException
 import java.io.OutputStream
@@ -61,7 +62,7 @@ interface PullTransport {
         /**
          * 推送 音频原始数据块
          */
-        fun postPullEvent(audioChunk: AudioChunk?) {
+        fun postPullDataEvent(audioChunk: AudioChunk?) {
             if (onAudioChunkPulledListener != null) {
                 handler.post { onAudioChunkPulledListener!!.onAudioChunkPulled(audioChunk) }
             }
@@ -87,7 +88,7 @@ interface PullTransport {
             while (pull) {
                 val count = audioRecord.read(audioChunk.toBytes(), 0, pullSizeInBytes)
                 if (AudioRecord.ERROR_INVALID_OPERATION != count && AudioRecord.ERROR_BAD_VALUE != count) {
-                    postPullEvent(audioChunk) // 推送原始音频数据块
+                    postPullDataEvent(audioChunk) // 推送原始音频数据块
                     outputStream.write(audioChunk.toBytes()) // 将数据写入文件
                 }
             }

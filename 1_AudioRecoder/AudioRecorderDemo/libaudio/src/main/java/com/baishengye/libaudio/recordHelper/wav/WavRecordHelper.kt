@@ -1,8 +1,10 @@
-package com.baishengye.libaudio.recordHelper
+package com.baishengye.libaudio.recordHelper.wav
 
 import android.Manifest
 import androidx.annotation.RequiresPermission
-import com.baishengye.libaudio.config.AudioRecordConfig
+import com.baishengye.libaudio.config.encode.AudioEncodeConfig
+import com.baishengye.libaudio.recordHelper.BaseAudioRecordHelper
+import com.baishengye.libaudio.recordHelper.PullTransport
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -21,9 +23,9 @@ class WavRecordHelper
  */
 @RequiresPermission(Manifest.permission.RECORD_AUDIO) constructor(
     file: File,
-    config: AudioRecordConfig,
+    config: AudioEncodeConfig,
     pullTransport: PullTransport
-) : BaseAudioRecorder(
+) : BaseAudioRecordHelper(
     file, config, pullTransport
 ) {
     override fun stopRecording() {

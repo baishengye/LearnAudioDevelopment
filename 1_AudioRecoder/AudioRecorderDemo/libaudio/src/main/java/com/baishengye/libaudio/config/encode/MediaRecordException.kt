@@ -1,8 +1,8 @@
-package com.baishengye.libaudio.config
+package com.baishengye.libaudio.config.encode
 
 /**
- * 媒体播放异常*/
-class MediaPlayException: Exception {
+ * 媒体录音异常*/
+class MediaRecordException: Exception {
 
     constructor():super()
 

@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.config
+package com.baishengye.libaudio.config.decode
 
 enum class MediaPlayState {
     STOP,

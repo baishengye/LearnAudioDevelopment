@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.config
+package com.baishengye.libaudio.config.encode
 
 enum class MediaRecordState {
     STOP,

@@ -3,15 +3,15 @@ package com.baishengye.libaudio.playhelper
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import com.baishengye.libaudio.config.MediaPlayException
-import com.baishengye.libaudio.config.MediaPlayState
+import com.baishengye.libaudio.config.decode.MediaPlayException
+import com.baishengye.libaudio.config.decode.MediaPlayState
 
 class MediaPlayHelper : PlayHelper {
 
     private var player: MediaPlayer? = null
 
-    private var playState:MediaPlayState = MediaPlayState.IDLE
-    private val handler : Handler = Handler(Looper.getMainLooper())
+    private var playState: MediaPlayState = MediaPlayState.IDLE
+    private val handler: Handler = Handler(Looper.getMainLooper())
 
     private var filePath:String ?= null
 
@@ -49,7 +49,7 @@ class MediaPlayHelper : PlayHelper {
     }
 
     override fun pausePlaying() {
-        if(playState!=MediaPlayState.PLAYING){
+        if (playState != MediaPlayState.PLAYING) {
             throw MediaPlayException("播放状态异常,当前状态为:${playState}")
         }
 
@@ -65,7 +65,7 @@ class MediaPlayHelper : PlayHelper {
     }
 
     override fun resumePlaying() {
-        if(playState!=MediaPlayState.PAUSE){
+        if (playState != MediaPlayState.PAUSE) {
             throw MediaPlayException("播放状态异常,当前状态为:${playState}")
         }
         try {
@@ -80,7 +80,7 @@ class MediaPlayHelper : PlayHelper {
     }
 
     override fun stopPlaying() {
-        if(playState==MediaPlayState.STOP||playState==MediaPlayState.IDLE){
+        if (playState == MediaPlayState.STOP || playState == MediaPlayState.IDLE) {
             throw MediaPlayException("播放状态异常,当前状态为:${playState}")
         }
         try {

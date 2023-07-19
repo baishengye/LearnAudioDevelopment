@@ -1,12 +1,12 @@
-package com.baishengye.libaudio.recordHelper
+package com.baishengye.libaudio.recordHelper.wav
 
-import com.baishengye.libaudio.config.AudioRecordConfig
+import com.baishengye.libaudio.config.encode.AudioEncodeConfig
 
 /**
  * WAV文件头工具类
  */
 class WavHeader internal constructor(// wav录音配置参数
-    private val config: AudioRecordConfig, // 音频数据总长度
+    private val config: AudioEncodeConfig, // 音频数据总长度
     private val totalAudioLength: Long
 ) {
     /**

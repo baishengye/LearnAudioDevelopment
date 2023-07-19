@@ -1,12 +1,17 @@
-package com.baishengye.libaudio.config
+package com.baishengye.libaudio.config.encode
 
 import android.media.AudioFormat
 
 /**
+ * 解码和编码都可以使用这个类
  * @param bytesPreSimple 一个样本所占字节
  * @param audioFormat 音频编码
  * @param channelConfig 声道*/
-enum class AudioEncodingFormat(val bytesPreSimple:Byte, val audioFormat:Int,val channelConfig:Int) {
+enum class AudioEncodingFormat(
+    val bytesPreSimple: Byte,
+    val audioFormat: Int,
+    val channelConfig: Int
+) {
 
     PCM_8BIT_MONO(1, AudioFormat.ENCODING_PCM_8BIT, AudioFormat.CHANNEL_IN_MONO),//8Bit单声道
     PCM_16BIT_MONO(2, AudioFormat.ENCODING_PCM_16BIT, AudioFormat.CHANNEL_IN_MONO),//16bit单声道
