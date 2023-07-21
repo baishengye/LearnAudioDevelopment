@@ -1,6 +1,8 @@
 package com.baishengye.libaudio.playhelper
 
 import android.annotation.SuppressLint
+import android.media.AudioAttributes
+import android.media.AudioFormat
 import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
@@ -19,7 +21,13 @@ abstract class BasePlayHelper protected constructor(
     protected val pushTransport: PushTransport
 ) : PlayHelper {
     protected var bufferSizeInBytes: Int = 0 // 缓冲区大小
+
+    @Volatile
     protected var playState: MediaPlayState = MediaPlayState.IDLE
+        set(value) {
+            field = value
+            notifyState(value)
+        }
 
     private var file: File? = null
     private var audioTrack: AudioTrack? = null
@@ -46,34 +54,38 @@ abstract class BasePlayHelper protected constructor(
             //假设：buffSizeInBytes = 1700
             //config.audioEncodingFormat.bytesPreSimple = 2
             //config.simplePreNotify = 160
-//            var simpleSize =
-//                (bufferSizeInBytes / config.audioDecodingFormat.bytesPreSimple)//1700/2=850
-//            if (simpleSize % config.simplePreNotify != 0) {//850/160=5余50
-//                simpleSize += (config.simplePreNotify - simpleSize % config.simplePreNotify)//850+160-50=960，960/160=6,可以除尽
-//                bufferSizeInBytes = simpleSize * config.audioDecodingFormat.bytesPreSimple//
-//            }
+            var simpleSize =
+                (bufferSizeInBytes / config.audioDecodingFormat.bytesPreSimple)//1700/2=850
+            if (simpleSize % config.simplePreNotify != 0) {//850/160=5余50
+                simpleSize += (config.simplePreNotify - simpleSize % config.simplePreNotify)//850+160-50=960，960/160=6,可以除尽
+                bufferSizeInBytes = simpleSize * config.audioDecodingFormat.bytesPreSimple//
+            }
 
-            audioTrack = AudioTrack(
-                config.streamType,
-                config.sampleRateInHz,
-                config.audioDecodingFormat.channelConfig,
-                config.audioDecodingFormat.audioFormat,
-                bufferSizeInBytes,
-                config.mod
-            )
+//            audioTrack = AudioTrack(
+//                config.streamType,
+//                config.sampleRateInHz,
+//                config.audioDecodingFormat.channelConfig,
+//                config.audioDecodingFormat.audioFormat,
+//                bufferSizeInBytes,
+//                config.mod
+//            )
 
-//            audioTrack = AudioTrack.Builder()
-//                .setBufferSizeInBytes(bufferSizeInBytes)
-//                .setAudioFormat(AudioFormat.Builder()
-//                    .setSampleRate(config.sampleRateInHz)//采样率
-//                    .setEncoding(config.audioDecodingFormat.audioFormat)//音频编码位数
-//                    .setChannelMask(config.audioDecodingFormat.channelConfig)//声道类型
-//                    .build())
-//                .setAudioAttributes(AudioAttributes.Builder()
-//                    .setLegacyStreamType(config.streamType)
-//                    .build())
-//                .setTransferMode(config.mod)
-//                .build()
+            audioTrack = AudioTrack.Builder()
+                .setBufferSizeInBytes(bufferSizeInBytes)
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setSampleRate(config.sampleRateInHz)//采样率
+                        .setEncoding(config.audioDecodingFormat.audioFormat)//音频编码位数
+                        .setChannelMask(config.audioDecodingFormat.channelConfig)//声道类型
+                        .build()
+                )
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setLegacyStreamType(config.streamType)
+                        .build()
+                )
+                .setTransferMode(config.mod)
+                .build()
 
             if (audioTrack!!.state != AudioTrack.STATE_INITIALIZED) {
                 throw IllegalStateException(
@@ -97,9 +109,8 @@ abstract class BasePlayHelper protected constructor(
         if (playState != MediaPlayState.IDLE) {
             throw MediaPlayException("状态异常，此时播放器状态为:${playState}")
         }
-        playState = MediaPlayState.PLAYING
 
-        executorService.submit { notifyState() }
+        executorService.submit { playState = MediaPlayState.PLAYING }
     }
 
     private fun startPlay() {
@@ -124,9 +135,8 @@ abstract class BasePlayHelper protected constructor(
         if (playState != MediaPlayState.PAUSE) {
             throw MediaRecordException("状态异常，此时播放器状态为:${playState}")
         }
-        playState = MediaPlayState.PLAYING
 
-        executorService.submit { notifyState() }
+        executorService.submit { playState = MediaPlayState.PLAYING }
     }
 
     override fun pausePlaying() {
@@ -136,8 +146,6 @@ abstract class BasePlayHelper protected constructor(
             throw MediaRecordException("状态异常，此时播放器状态为:${playState}")
         }
         playState = MediaPlayState.PAUSE
-
-        notifyState()
     }
 
     override fun stopPlaying() {
@@ -147,8 +155,6 @@ abstract class BasePlayHelper protected constructor(
             throw MediaRecordException("状态异常，此时播放器状态为:${playState}")
         }
         playState = MediaPlayState.STOP
-
-        notifyState()
     }
 
 
@@ -166,18 +172,18 @@ abstract class BasePlayHelper protected constructor(
         return playState == MediaPlayState.PAUSE
     }
 
-    private fun notifyState() {
-        when (playState) {
+    private fun notifyState(state: MediaPlayState) {
+        //播放状态监听
+        handler.post {
+            playStateChange?.invoke(state)
+        }
+
+        when (state) {
             MediaPlayState.STOP -> releaseResource()
             MediaPlayState.PAUSE -> stopPlay()
             MediaPlayState.PLAYING -> startPlay()
             else -> {}
         }
-
-        //播放状态监听
-//        handler.post {
-//            playStateChange?.invoke(playState)
-//        }
     }
 
     private fun releaseResource() {

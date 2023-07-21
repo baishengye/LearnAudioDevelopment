@@ -86,21 +86,21 @@ interface PushTransport {
             inputStream: InputStream,
             postPushEndEvent: (Boolean) -> Unit
         ) {
-            val audioChunk: AudioChunk = AudioChunk.Bytes(ByteArray(pushSizeInBytes))
+            val data = ByteArray(pushSizeInBytes)
+            audioTrack.play()
             while (push) {
                 var readSize = -1
                 try {
-                    readSize = inputStream.read(audioChunk.toBytes())
+                    readSize = inputStream.read(data)
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
                 if (readSize <= 0) {
-                    isEnableToBePushed(false)
                     postPushEndEvent(true)
                     continue
                 }
-                postPushDataEvent(audioChunk)
-                audioTrack.write(audioChunk.toBytes(), 0, readSize)
+                postPushDataEvent(AudioChunk.Bytes(data))
+                audioTrack.write(data, 0, readSize)
             }
         }
     }
