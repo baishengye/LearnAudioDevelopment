@@ -28,6 +28,9 @@
         <activity
             android:name=".WavByAudioRecordAndMediaPlayerActivity"
             android:exported="true" />
+        <activity
+            android:name=".WavByAudioRecordAndAudioTrackActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

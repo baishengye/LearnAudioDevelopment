@@ -12,18 +12,30 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="尝试PCM"
-        app:layout_constraintEnd_toStartOf="@id/btnWav"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toStartOf="@id/btnWavAudioTrack"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 
     <Button
-        android:id="@+id/btnWav"
+        android:id="@+id/btnWavAudioTrack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="尝试WAV"
+        android:text="尝试WAV/AudioTrack"
+        android:textAllCaps="false"
         app:layout_constraintStart_toEndOf="@id/btnPcm"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnWavMediaPlayer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="尝试WAV/MediaPlayer"
+        android:textAllCaps="false"
+        app:layout_constraintStart_toStartOf="@id/btnPcm"
+        app:layout_constraintEnd_toEndOf="@id/btnPcm"
+        app:layout_constraintTop_toBottomOf="@id/btnPcm" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
