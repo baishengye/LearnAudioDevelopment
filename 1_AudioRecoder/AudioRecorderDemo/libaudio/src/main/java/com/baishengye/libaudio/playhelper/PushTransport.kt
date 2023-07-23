@@ -86,12 +86,12 @@ interface PushTransport {
             inputStream: InputStream,
             postPushEndEvent: (Boolean) -> Unit
         ) {
-            val data = ByteArray(pushSizeInBytes)
+            val audioChunk = AudioChunk.Bytes(ByteArray(pushSizeInBytes))
             audioTrack.play()
             while (push) {
                 var readSize = -1
                 try {
-                    readSize = inputStream.read(data)
+                    readSize = inputStream.read(audioChunk.toBytes())
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
@@ -99,8 +99,8 @@ interface PushTransport {
                     postPushEndEvent(true)
                     continue
                 }
-                postPushDataEvent(AudioChunk.Bytes(data))
-                audioTrack.write(data, 0, readSize)
+                postPushDataEvent(audioChunk)
+                audioTrack.write(audioChunk.toBytes(), 0, readSize)
             }
         }
     }

@@ -1,9 +1,10 @@
-package com.baishengye.libaudio.config.encode
+package com.baishengye.libaudio.recordHelper.pcm
 
 import android.media.AudioFormat
 import android.media.MediaRecorder
+import com.baishengye.libaudio.config.encode.AudioEncodingFormat
 
-open class AudioEncodeConfig(
+open class PcmEncodeConfig(
 
     /**
      * 音频源，详见

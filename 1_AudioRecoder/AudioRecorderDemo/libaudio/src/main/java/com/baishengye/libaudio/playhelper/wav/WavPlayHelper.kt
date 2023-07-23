@@ -1,11 +1,13 @@
-package com.baishengye.libaudio.playhelper
+package com.baishengye.libaudio.playhelper.wav
 
-import com.baishengye.libaudio.config.decode.AudioDecodeConfig
 import com.baishengye.libaudio.config.decode.AudioDecodingFormat
 import com.baishengye.libaudio.helper.WaveFileInfoHelper
+import com.baishengye.libaudio.playhelper.BasePlayHelper
+import com.baishengye.libaudio.playhelper.PushTransport
+import com.baishengye.libaudio.playhelper.pcm.PcmDecodeConfig
 
 class WavPlayHelper(
-    config: AudioDecodeConfig,
+    config: PcmDecodeConfig,
     pushTransport: PushTransport
 ) : BasePlayHelper(config, pushTransport) {
     override fun startPlaying(path: String) {

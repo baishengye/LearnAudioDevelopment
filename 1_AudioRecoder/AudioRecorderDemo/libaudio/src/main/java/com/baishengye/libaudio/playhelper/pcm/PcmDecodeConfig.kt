@@ -1,10 +1,11 @@
-package com.baishengye.libaudio.config.decode
+package com.baishengye.libaudio.playhelper.pcm
 
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import com.baishengye.libaudio.config.decode.AudioDecodingFormat
 
-open class AudioDecodeConfig(
+open class PcmDecodeConfig(
     /**
      * 采样率 赫兹
      * - 44100Hz 所有设备均可用

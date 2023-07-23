@@ -4,9 +4,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.media.AudioRecord
 import androidx.annotation.RequiresPermission
-import com.baishengye.libaudio.config.encode.AudioEncodeConfig
 import com.baishengye.libaudio.config.encode.MediaRecordException
 import com.baishengye.libaudio.config.encode.MediaRecordState
+import com.baishengye.libaudio.recordHelper.pcm.PcmEncodeConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
  */
 open class BaseAudioRecordHelper @RequiresPermission(Manifest.permission.RECORD_AUDIO) protected constructor(
     protected val file: File,
-    protected val config: AudioEncodeConfig,
+    protected val config: PcmEncodeConfig,
     protected val pullTransport: PullTransport
 ) : RecordHelper {
 

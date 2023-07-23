@@ -7,14 +7,14 @@ import android.util.Log
 import android.view.View
 import com.baishengye.audiorecorderdemo.databinding.ActivityWavBinding
 import com.baishengye.audiorecorderdemo.databinding.ItemAudioFileBinding
-import com.baishengye.libaudio.config.decode.AudioDecodeConfig
 import com.baishengye.libaudio.config.decode.MediaPlayState.*
-import com.baishengye.libaudio.config.encode.AudioEncodeConfig
-import com.baishengye.libaudio.playhelper.PcmPlayHelper
 import com.baishengye.libaudio.playhelper.PushTransport
+import com.baishengye.libaudio.playhelper.pcm.PcmDecodeConfig
+import com.baishengye.libaudio.playhelper.pcm.PcmPlayHelper
 import com.baishengye.libaudio.recordHelper.PullTransport
 import com.baishengye.libaudio.recordHelper.RecordHelper
 import com.baishengye.libaudio.recordHelper.RecordHelperCreator
+import com.baishengye.libaudio.recordHelper.pcm.PcmEncodeConfig
 import com.baishengye.libbase.base.BaseViewBindingActivity
 import com.baishengye.libutil.utils.DateUtil
 import com.baishengye.libutil.utils.DateUtil.formatTime
@@ -31,7 +31,7 @@ import java.util.*
 class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWavBinding>() {
     private var pcmRecordHelper: RecordHelper? = null
     private val pcmPlayHelper: PcmPlayHelper =
-        PcmPlayHelper(AudioDecodeConfig(), PushTransport.Default())
+        PcmPlayHelper(PcmDecodeConfig(), PushTransport.Default())
 
     private var pcmDirPath: String? = null
     private var recordFile: File? = null
@@ -123,7 +123,7 @@ class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWa
                     File(pcmDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.pcm")
                 pcmRecordHelper = RecordHelperCreator.wav(
                     recordFile!!,
-                    AudioEncodeConfig(),
+                    PcmEncodeConfig(),
                     PullTransport.Default()
                 )
                 pcmRecordHelper?.startRecording()

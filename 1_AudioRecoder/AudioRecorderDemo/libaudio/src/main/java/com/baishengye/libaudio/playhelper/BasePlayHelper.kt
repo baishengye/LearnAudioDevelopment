@@ -6,10 +6,10 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
-import com.baishengye.libaudio.config.decode.AudioDecodeConfig
 import com.baishengye.libaudio.config.decode.MediaPlayException
 import com.baishengye.libaudio.config.decode.MediaPlayState
 import com.baishengye.libaudio.config.encode.MediaRecordException
+import com.baishengye.libaudio.playhelper.pcm.PcmDecodeConfig
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -17,7 +17,7 @@ import java.io.InputStream
 import java.util.concurrent.Executors
 
 abstract class BasePlayHelper protected constructor(
-    protected val config: AudioDecodeConfig,
+    protected val config: PcmDecodeConfig,
     protected val pushTransport: PushTransport
 ) : PlayHelper {
     protected var bufferSizeInBytes: Int = 0 // 缓冲区大小

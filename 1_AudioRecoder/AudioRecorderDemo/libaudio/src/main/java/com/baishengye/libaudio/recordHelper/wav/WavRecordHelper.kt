@@ -2,9 +2,9 @@ package com.baishengye.libaudio.recordHelper.wav
 
 import android.Manifest
 import androidx.annotation.RequiresPermission
-import com.baishengye.libaudio.config.encode.AudioEncodeConfig
 import com.baishengye.libaudio.recordHelper.BaseAudioRecordHelper
 import com.baishengye.libaudio.recordHelper.PullTransport
+import com.baishengye.libaudio.recordHelper.pcm.PcmEncodeConfig
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -23,7 +23,7 @@ class WavRecordHelper
  */
 @RequiresPermission(Manifest.permission.RECORD_AUDIO) constructor(
     file: File,
-    config: AudioEncodeConfig,
+    config: PcmEncodeConfig,
     pullTransport: PullTransport
 ) : BaseAudioRecordHelper(
     file, config, pullTransport
