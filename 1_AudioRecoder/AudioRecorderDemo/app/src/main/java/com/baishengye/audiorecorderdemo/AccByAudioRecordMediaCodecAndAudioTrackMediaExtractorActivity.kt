@@ -8,13 +8,12 @@ import android.view.View
 import com.baishengye.audiorecorderdemo.databinding.ActivityWavBinding
 import com.baishengye.audiorecorderdemo.databinding.ItemAudioFileBinding
 import com.baishengye.libaudio.config.decode.MediaPlayState.*
-import com.baishengye.libaudio.playhelper.pcm1.PcmPushTransport
-import com.baishengye.libaudio.playhelper.pcm1.pcm.PcmDecodeConfig
-import com.baishengye.libaudio.playhelper.pcm1.pcm.PcmPlayHelper
-import com.baishengye.libaudio.recordHelper.RecordHelper
-import com.baishengye.libaudio.recordHelper.pcm.PcmPullTransport
-import com.baishengye.libaudio.recordHelper.pcm.RecordHelperCreator
-import com.baishengye.libaudio.recordHelper.pcm.pcm.PcmEncodeConfig
+import com.baishengye.libaudio.playhelper.mediacodec.acc.AccPlayHelperWithMediaCodec
+import com.baishengye.libaudio.playhelper.mediacodec.acc.AccPushTransportWithMediaCodec
+import com.baishengye.libaudio.playhelper.mediacodec.acc.MediaCodecDecodeConfig
+import com.baishengye.libaudio.recordHelper.meidacodec.acc.AccAudioRecordHelperWithMediaCodec
+import com.baishengye.libaudio.recordHelper.meidacodec.acc.AccPullTransportWithMediaCodec
+import com.baishengye.libaudio.recordHelper.meidacodec.acc.MediaCodecEncodeConfig
 import com.baishengye.libbase.base.BaseViewBindingActivity
 import com.baishengye.libutil.utils.DateUtil
 import com.baishengye.libutil.utils.DateUtil.formatTime
@@ -28,14 +27,14 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 
-class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWavBinding>() {
-    private var pcmRecordHelper: RecordHelper? = null
-    private val pcmPlayHelper: PcmPlayHelper =
-        PcmPlayHelper(PcmDecodeConfig(), PcmPushTransport.Default())
+class AccByAudioRecordMediaCodecAndAudioTrackMediaExtractorActivity :
+    BaseViewBindingActivity<ActivityWavBinding>() {
+    private var accRecordHelper: AccAudioRecordHelperWithMediaCodec? = null
+    private var accPlayHelper: AccPlayHelperWithMediaCodec? = null
 
-    private var pcmDirPath: String? = null
+    private var accDirPath: String? = null
     private var recordFile: File? = null
-    private var pcmFilesName: MutableList<String> = mutableListOf()
+    private var accFilesName: MutableList<String> = mutableListOf()
 
     override fun getViewBinding(): ActivityWavBinding = ActivityWavBinding.inflate(layoutInflater)
 
@@ -54,24 +53,32 @@ class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWa
 
                 startPlay(fileName)
             }
-        }.models = pcmFilesName
+        }.models = accFilesName
     }
 
     private fun startPlay(fileName: String) {
-        pcmPlayHelper.apply {
+        val mediaCodecDecodeConfig = MediaCodecDecodeConfig()
+        accPlayHelper = AccPlayHelperWithMediaCodec(
+            mediaCodecDecodeConfig,
+            AccPushTransportWithMediaCodec.Default()
+                .setMediaCodecEncodeConfig(mediaCodecDecodeConfig)
+        )
+
+        accPlayHelper?.apply {
             setPlayStateChange { mediaPlayState ->
                 when (mediaPlayState) {
                     STOP -> binding.llPlayer.visibility = View.GONE
                     PAUSE -> binding.tvPlay.text = "播放"
                     IDLE -> binding.llPlayer.visibility = View.VISIBLE
                     PLAYING -> {
+                        binding.llPlayer.visibility = View.VISIBLE
                         binding.sbBar.max = 100
                         binding.tvRightTime.text = formatTime(0)
                         binding.tvPlay.text = "暂停"
                     }
                 }
             }
-            startPlaying(pcmDirPath + fileName)
+            startPlaying(accDirPath + fileName)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 binding.sbBar.min = 0
             }
@@ -80,7 +87,7 @@ class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWa
             //----------定时器记录播放进度---------//
             val mTimerTask: TimerTask = object : TimerTask() {
                 override fun run() {
-                    this@PcmByAudioRecordAndAudioTrackActivity.runOnUiThread {
+                    this@AccByAudioRecordMediaCodecAndAudioTrackMediaExtractorActivity.runOnUiThread {
                         if (isPlaying()) {
                             binding.sbBar.progress = 0
                             binding.tvLeftTime.text = formatTime(0)
@@ -93,61 +100,64 @@ class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWa
     }
 
     override fun initData() {
-        pcmDirPath = FolderUtils.getAudioFolderPath(this)
-        Log.d("TEST", "pcmDirPath:${pcmDirPath}")
+        accDirPath = FolderUtils.getAudioFolderPath(this)
+        Log.d("TEST", "accDirPath:${accDirPath}")
     }
 
     @SuppressLint("MissingPermission", "NotifyDataSetChanged")
     override fun initListeners() {
+
+
         binding.tvPlay.setOnClickListener {
-            if (pcmPlayHelper.isPlaying()) {
-                pcmPlayHelper.pausePlaying()
+            if (accPlayHelper?.isPlaying() == true) {
+                accPlayHelper?.pausePlaying()
             } else {
-                pcmPlayHelper.resumePlaying()
+                accPlayHelper?.resumePlaying()
             }
         }
 
         binding.tvCancel.setOnClickListener {
-            if (pcmPlayHelper.isPlaying() || pcmPlayHelper.isPaused()) {
-                pcmPlayHelper.stopPlaying()
+            if (accPlayHelper?.isPlaying() == true || accPlayHelper?.isPaused() == true) {
+                accPlayHelper?.stopPlaying()
             }
         }
 
         binding.btnWavRecordStartStop.setOnClickListener {
-            if (binding.btnWavRecordStartStop.text == "开始录音" && !TextUtils.isEmpty(pcmDirPath)) {
+            if (binding.btnWavRecordStartStop.text == "开始录音" && !TextUtils.isEmpty(accDirPath)) {
                 binding.btnWavRecordStartStop.text = "停止录音"
                 binding.btnWavRecordPauseResume.text = "暂停"
                 binding.btnWavRecordPauseResume.visibility = View.VISIBLE
 
                 recordFile =
-                    File(pcmDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.pcm")
-                pcmRecordHelper = RecordHelperCreator.wav(
-                    recordFile!!,
-                    PcmEncodeConfig(),
-                    PcmPullTransport.Default()
+                    File(accDirPath + "record_${DateUtil.calenderToFormatString(Calendar.getInstance())}.acc")
+                val mediaCodecEncodeConfig = MediaCodecEncodeConfig()
+                accRecordHelper = AccAudioRecordHelperWithMediaCodec(
+                    recordFile!!, mediaCodecEncodeConfig,
+                    AccPullTransportWithMediaCodec.Default()
+                        .setMediaCodecEncodeConfig(mediaCodecEncodeConfig)
                 )
-                pcmRecordHelper?.startRecording()
+                accRecordHelper?.startRecording()
 
-            } else if (!TextUtils.isEmpty(pcmDirPath)) {
+            } else if (!TextUtils.isEmpty(accDirPath)) {
                 binding.btnWavRecordStartStop.text = "开始录音"
                 binding.btnWavRecordPauseResume.visibility = View.GONE
 
-                pcmRecordHelper?.stopRecording()
+                accRecordHelper?.stopRecording()
                 recordFile = null
-                pcmRecordHelper = null
+                accRecordHelper = null
             }
         }
 
         binding.btnWavRecordPauseResume.setOnClickListener {
-            if (binding.btnWavRecordPauseResume.text == "暂停" && !TextUtils.isEmpty(pcmDirPath)) {
+            if (binding.btnWavRecordPauseResume.text == "暂停" && !TextUtils.isEmpty(accDirPath)) {
                 binding.btnWavRecordPauseResume.text = "继续"
 
-                pcmRecordHelper?.pauseRecording()
+                accRecordHelper?.pauseRecording()
 
-            } else if (!TextUtils.isEmpty(pcmDirPath)) {
+            } else if (!TextUtils.isEmpty(accDirPath)) {
                 binding.btnWavRecordPauseResume.text = "暂停"
 
-                pcmRecordHelper?.resumeRecording()
+                accRecordHelper?.resumeRecording()
             }
         }
 
@@ -155,9 +165,9 @@ class PcmByAudioRecordAndAudioTrackActivity : BaseViewBindingActivity<ActivityWa
             // 在协程中执行异步任务
             CoroutineScope(Dispatchers.Main).launch {
                 val result = withContext(Dispatchers.IO) {
-                    pcmFilesName.clear()
+                    accFilesName.clear()
                     // 在 IO 线程执行耗时操作，例如网络请求或数据库查询
-                    pcmFilesName.addAll(getAllPcmFiles(pcmDirPath!!, ".pcm"))
+                    accFilesName.addAll(getAllPcmFiles(accDirPath!!, ".acc"))
                 }
 
                 binding.rvAudioList.adapter?.notifyDataSetChanged()

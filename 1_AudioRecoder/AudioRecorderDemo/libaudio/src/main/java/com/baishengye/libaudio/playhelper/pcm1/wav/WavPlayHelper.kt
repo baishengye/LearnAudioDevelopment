@@ -1,14 +1,14 @@
-package com.baishengye.libaudio.playhelper.wav
+package com.baishengye.libaudio.playhelper.pcm1.wav
 
 import com.baishengye.libaudio.config.decode.AudioDecodingFormat
 import com.baishengye.libaudio.helper.WaveFileInfoHelper
-import com.baishengye.libaudio.playhelper.BasePlayHelper
-import com.baishengye.libaudio.playhelper.PushTransport
-import com.baishengye.libaudio.playhelper.pcm.PcmDecodeConfig
+import com.baishengye.libaudio.playhelper.pcm1.BasePlayHelper
+import com.baishengye.libaudio.playhelper.pcm1.PcmPushTransport
+import com.baishengye.libaudio.playhelper.pcm1.pcm.PcmDecodeConfig
 
 class WavPlayHelper(
     config: PcmDecodeConfig,
-    pushTransport: PushTransport
+    pushTransport: PcmPushTransport
 ) : BasePlayHelper(config, pushTransport) {
     override fun startPlaying(path: String) {
         //todo 将Wav播放所需的WavHead中的声道,音频编码(声道位数),采样率

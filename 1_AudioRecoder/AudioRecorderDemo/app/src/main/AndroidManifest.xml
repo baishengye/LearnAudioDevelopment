@@ -31,6 +31,12 @@
         <activity
             android:name=".WavByAudioRecordAndAudioTrackActivity"
             android:exported="true" />
+        <activity
+            android:name=".AccByAudioRecordMediaCodecAndAudioTrackMediaExtractorActivity"
+            android:exported="true" />
+        <activity
+            android:name=".AccByAudioRecordMediaCodecAndMediaPlayerActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

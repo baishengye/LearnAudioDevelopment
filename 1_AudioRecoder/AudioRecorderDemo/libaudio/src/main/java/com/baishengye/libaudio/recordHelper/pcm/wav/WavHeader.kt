@@ -1,6 +1,6 @@
-package com.baishengye.libaudio.recordHelper.wav
+package com.baishengye.libaudio.recordHelper.pcm.wav
 
-import com.baishengye.libaudio.recordHelper.pcm.PcmEncodeConfig
+import com.baishengye.libaudio.recordHelper.pcm.pcm.PcmEncodeConfig
 
 /**
  * WAV文件头工具类

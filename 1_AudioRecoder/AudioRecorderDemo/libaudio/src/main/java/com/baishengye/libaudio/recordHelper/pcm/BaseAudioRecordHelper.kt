@@ -1,4 +1,4 @@
-package com.baishengye.libaudio.recordHelper
+package com.baishengye.libaudio.recordHelper.pcm
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -6,7 +6,8 @@ import android.media.AudioRecord
 import androidx.annotation.RequiresPermission
 import com.baishengye.libaudio.config.encode.MediaRecordException
 import com.baishengye.libaudio.config.encode.MediaRecordState
-import com.baishengye.libaudio.recordHelper.pcm.PcmEncodeConfig
+import com.baishengye.libaudio.recordHelper.RecordHelper
+import com.baishengye.libaudio.recordHelper.pcm.pcm.PcmEncodeConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -20,7 +21,7 @@ import java.util.concurrent.Executors
 open class BaseAudioRecordHelper @RequiresPermission(Manifest.permission.RECORD_AUDIO) protected constructor(
     protected val file: File,
     protected val config: PcmEncodeConfig,
-    protected val pullTransport: PullTransport
+    protected val pullTransport: PcmPullTransport
 ) : RecordHelper {
 
     protected var bufferSizeInBytes: Int = 0 // 缓冲区大小
@@ -102,7 +103,15 @@ open class BaseAudioRecordHelper @RequiresPermission(Manifest.permission.RECORD_
             }
             audioRecord!!.startRecording()
             pullTransport.isEnableToBePulled(true)
-            pullTransport.startPoolingAndWriting((audioRecord)!!, bufferSizeInBytes, outputStream!!)
+            pullTransport.startPoolingAndWriting(
+                (audioRecord)!!,
+                bufferSizeInBytes,
+                outputStream!!
+            ) {
+                if (it) {
+                    stopRecording()
+                }
+            }
         } catch (e: IOException) {
             e.printStackTrace()
         }

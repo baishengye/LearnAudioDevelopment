@@ -1,10 +1,10 @@
-package com.baishengye.libaudio.recordHelper
+package com.baishengye.libaudio.recordHelper.pcm
 
 import android.media.AudioRecord
 import android.os.Handler
 import android.os.Looper
 import com.baishengye.libaudio.config.AudioChunk
-import com.baishengye.libaudio.recordHelper.PullTransport.OnAudioChunkPulledListener
+import com.baishengye.libaudio.recordHelper.pcm.PcmPullTransport.OnAudioChunkPulledListener
 import java.io.IOException
 import java.io.OutputStream
 
@@ -15,7 +15,7 @@ import java.io.OutputStream
  * 基本上它只是从[AudioRecord]中提取数据，并将其传输到[OutputStream]，以写入输出文件。
  * 可以对每次音频数据拉取过程进行监听[OnAudioChunkPulledListener]
  */
-interface PullTransport {
+interface PcmPullTransport {
     /**
      * 是否开启拉取
      *
@@ -34,7 +34,8 @@ interface PullTransport {
     fun startPoolingAndWriting(
         audioRecord: AudioRecord,
         pullSizeInBytes: Int,
-        outputStream: OutputStream
+        outputStream: OutputStream,
+        postPullEndEvent: (Boolean) -> Unit
     )
 
     /**
@@ -49,7 +50,7 @@ interface PullTransport {
         fun onAudioChunkPulled(audioChunk: AudioChunk?)
     }
 
-    abstract class AbstractPullTransport internal constructor() : PullTransport {
+    abstract class AbstractPullTransport internal constructor() : PcmPullTransport {
         @Volatile
         var pull = false
         var onAudioChunkPulledListener: OnAudioChunkPulledListener? = null
@@ -82,7 +83,8 @@ interface PullTransport {
         override fun startPoolingAndWriting(
             audioRecord: AudioRecord,
             pullSizeInBytes: Int,
-            outputStream: OutputStream
+            outputStream: OutputStream,
+            postPullEndEvent: (Boolean) -> Unit
         ) {
             val audioChunk: AudioChunk = AudioChunk.Bytes(ByteArray(pullSizeInBytes))
             while (pull) {
@@ -90,6 +92,8 @@ interface PullTransport {
                 if (AudioRecord.ERROR_INVALID_OPERATION != count && AudioRecord.ERROR_BAD_VALUE != count) {
                     postPullDataEvent(audioChunk) // 推送原始音频数据块
                     outputStream.write(audioChunk.toBytes()) // 将数据写入文件
+                } else {
+                    postPullEndEvent.invoke(true)
                 }
             }
         }

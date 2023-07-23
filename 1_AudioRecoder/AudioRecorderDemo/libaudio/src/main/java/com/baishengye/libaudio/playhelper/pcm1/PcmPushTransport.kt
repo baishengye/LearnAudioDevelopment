@@ -1,9 +1,10 @@
-package com.baishengye.libaudio.playhelper
+package com.baishengye.libaudio.playhelper.pcm1
 
 import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
 import com.baishengye.libaudio.config.AudioChunk
+import com.baishengye.libaudio.playhelper.pcm1.PcmPushTransport.OnAudioChunkPushedListener
 import java.io.IOException
 import java.io.InputStream
 
@@ -12,9 +13,9 @@ import java.io.InputStream
  *
  * 此类表示「录音机」和「输出文件」之间的总线。
  * 基本上它只是从[InputStream]中提取数据，并将其传输到[AudioTrack]，以写入输出文件。
- * 可以对每次音频数据拉取过程进行监听[OnAudioChunkPulledListener]
+ * 可以对每次音频数据拉取过程进行监听[OnAudioChunkPushedListener]
  */
-interface PushTransport {
+interface PcmPushTransport {
     /**
      * 是否开启推送
      *
@@ -50,7 +51,7 @@ interface PushTransport {
         fun onAudioChunkPushed(audioChunk: AudioChunk?)
     }
 
-    abstract class AbstractPushTransport internal constructor() : PushTransport {
+    abstract class AbstractPushTransport internal constructor() : PcmPushTransport {
         @Volatile
         var push = false
         var onAudioChunkPushedListener: OnAudioChunkPushedListener? = null

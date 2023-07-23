@@ -44,6 +44,22 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
         binding.btnWavAudioTrack.setOnClickListener {
             startActivity(Intent(this, WavByAudioRecordAndAudioTrackActivity::class.java))
         }
+        binding.btnAccAudioTrack.setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    AccByAudioRecordMediaCodecAndAudioTrackMediaExtractorActivity::class.java
+                )
+            )
+        }
+        binding.btnAccMediaPlayer.setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    AccByAudioRecordMediaCodecAndMediaPlayerActivity::class.java
+                )
+            )
+        }
     }
 
 

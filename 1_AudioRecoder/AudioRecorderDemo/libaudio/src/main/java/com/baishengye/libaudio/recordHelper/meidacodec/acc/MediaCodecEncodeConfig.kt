@@ -1,10 +1,11 @@
-package com.baishengye.libaudio.recordHelper.pcm
+package com.baishengye.libaudio.recordHelper.meidacodec.acc
 
 import android.media.AudioFormat
+import android.media.MediaFormat
 import android.media.MediaRecorder
 import com.baishengye.libaudio.config.encode.AudioEncodingFormat
 
-open class PcmEncodeConfig(
+open class MediaCodecEncodeConfig(
 
     /**
      * 音频源，详见
@@ -25,6 +26,20 @@ open class PcmEncodeConfig(
      * */
     var audioEncodingFormat: AudioEncodingFormat = AudioEncodingFormat.PCM_16BIT_STEREO,
 
+//    /**
+//     * 比特率
+//     */
+//    var bitRate:Int = 99600,
+//
+//    /**
+//     * 最大输入size
+//     */
+//    var maxInputSize:Int = 4096,
+
+    /**
+     * 编码类型
+     */
+    var mime: String = MediaFormat.MIMETYPE_AUDIO_AAC,
 
     /**
      * 帧数:每采160次样本通知将数据编码设置的音频格式*/
@@ -51,5 +66,10 @@ open class PcmEncodeConfig(
      * 声道数*/
     open fun channels(): Int {
         return if (audioEncodingFormat.channelConfig == AudioFormat.CHANNEL_IN_MONO) 1 else 2
+    }
+
+    /**比特率 = 声道数*每个声道所占位数*采样率*/
+    open fun bitRates(): Int {
+        return channels() * bitsPreChannel() * sampleRateInHz
     }
 }

@@ -1,10 +1,11 @@
-package com.baishengye.libaudio.recordHelper
+package com.baishengye.libaudio.recordHelper.pcm
 
 import android.Manifest
 import androidx.annotation.RequiresPermission
-import com.baishengye.libaudio.recordHelper.pcm.PcmEncodeConfig
-import com.baishengye.libaudio.recordHelper.pcm.PcmRecordHelper
-import com.baishengye.libaudio.recordHelper.wav.WavRecordHelper
+import com.baishengye.libaudio.recordHelper.RecordHelper
+import com.baishengye.libaudio.recordHelper.pcm.pcm.PcmEncodeConfig
+import com.baishengye.libaudio.recordHelper.pcm.pcm.PcmRecordHelper
+import com.baishengye.libaudio.recordHelper.pcm.wav.WavRecordHelper
 import java.io.File
 
 object RecordHelperCreator {
@@ -19,7 +20,7 @@ object RecordHelperCreator {
      */
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     @Throws(IllegalArgumentException::class)
-    fun pcm(file: File, config: PcmEncodeConfig, pullTransport: PullTransport): RecordHelper {
+    fun pcm(file: File, config: PcmEncodeConfig, pullTransport: PcmPullTransport): RecordHelper {
         return PcmRecordHelper(file, config, pullTransport)
     }
 
@@ -33,7 +34,7 @@ object RecordHelperCreator {
      */
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     @Throws(IllegalArgumentException::class)
-    fun wav(file: File, config: PcmEncodeConfig, pullTransport: PullTransport): RecordHelper {
+    fun wav(file: File, config: PcmEncodeConfig, pullTransport: PcmPullTransport): RecordHelper {
         return WavRecordHelper(file, config, pullTransport)
     }
 }
