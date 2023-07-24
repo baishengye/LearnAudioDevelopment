@@ -29,10 +29,10 @@
 #include <stdlib.h>
 #include "common.h"
 #include "huffman.h"
-#include "lame.h"
-#include "machine.h"
-#include "encoder.h"
-#include "lame-analysis.h"
+#include "../include/lame.h"
+#include "../libmp3lame/machine.h"
+#include "../libmp3lame/encoder.h"
+#include "../libmp3lame/lame-analysis.h"
 #include "decode_i386.h"
 #include "layer3.h"
 

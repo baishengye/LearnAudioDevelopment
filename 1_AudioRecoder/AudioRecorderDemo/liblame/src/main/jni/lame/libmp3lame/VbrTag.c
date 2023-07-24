@@ -26,7 +26,7 @@
 # include <config.h>
 #endif
 
-#include "lame.h"
+#include "../include/lame.h"
 #include "machine.h"
 #include "encoder.h"
 #include "util.h"

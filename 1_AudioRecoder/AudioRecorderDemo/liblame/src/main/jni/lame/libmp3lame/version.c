@@ -36,7 +36,7 @@
 #endif
 
 
-#include "lame.h"
+#include "../include/lame.h"
 #include "machine.h"
 
 #include "version.h"    /* macros of version numbers */

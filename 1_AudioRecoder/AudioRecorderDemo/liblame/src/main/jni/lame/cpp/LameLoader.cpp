@@ -15,8 +15,8 @@ extern "C" {
  */
 extern "C" jstring Java_com_baishengye_liblame_LameLoader_getLameVersion
         (JNIEnv *env, jobject obj) {
-    std::string labelString = "Hello native c++ from 2023";
-    return env->NewStringUTF(labelString.c_str());
+//    std::string labelString = "Hello native c++ from 2023";
+    return env->NewStringUTF(get_lame_version());
 }
 
 #ifdef __cplusplus

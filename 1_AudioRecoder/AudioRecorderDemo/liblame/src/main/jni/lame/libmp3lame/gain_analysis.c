@@ -96,7 +96,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lame.h"
+#include "../include/lame.h"
 #include "machine.h"
 #include "gain_analysis.h"
 

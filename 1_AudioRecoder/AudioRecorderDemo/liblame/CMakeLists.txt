@@ -71,8 +71,17 @@ cmake_minimum_required(VERSION 3.10)
 #        src/main/jni/lame/mpglib/tabinit.c
 #        src/main/jni/lame/mpglib/tabinit.h)
 
+aux_source_directory(src/main/jni/lame/libmp3lame LIB_MP3_LAME)
+aux_source_directory(src/main/jni/lame/mpglib MPG_LIB)
+aux_source_directory(src/main/jni/lame/libmp3lame/i386 I386)
+aux_source_directory(src/main/jni/lame/libmp3lame/vector VECTOR)
 add_library(LameLoader SHARED
-        src/main/jni/lame/cpp/LameLoader.cpp)
+        src/main/jni/lame/cpp/LameLoader.cpp
+        src/main/jni/lame/cpp/com_baishengye_liblame_LameLoader.h
+        ${LIB_MP3_LAME}
+        ${MPG_LIB}
+        ${I386}
+        ${VECTOR})
 
 find_library(log-lib log)
 

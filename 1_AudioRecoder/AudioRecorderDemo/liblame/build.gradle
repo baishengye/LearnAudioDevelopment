@@ -17,6 +17,8 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags ""
+                cFlags "-DSTDC_HEADERS"
+                cFlags "-DHAVE_MPGLIB"
             }
         }
         ndk {

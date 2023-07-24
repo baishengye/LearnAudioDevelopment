@@ -21,7 +21,7 @@
 #ifndef _MPGLIB_H_
 #define _MPGLIB_H_
 
-#include "lame.h"
+#include "../include/lame.h"
 
 #ifndef plotting_data_defined
 #define plotting_data_defined

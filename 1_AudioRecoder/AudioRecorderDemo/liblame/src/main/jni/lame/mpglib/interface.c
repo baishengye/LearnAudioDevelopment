@@ -33,9 +33,9 @@
 #include "interface.h"
 #include "tabinit.h"
 #include "layer3.h"
-#include "lame.h"
-#include "machine.h"
-#include "VbrTag.h"
+#include "../include/lame.h"
+#include "../libmp3lame/machine.h"
+#include "../libmp3lame/VbrTag.h"
 #include "decode_i386.h"
 
 #include "layer1.h"

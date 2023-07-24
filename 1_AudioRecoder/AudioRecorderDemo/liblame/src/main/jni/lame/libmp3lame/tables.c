@@ -27,7 +27,7 @@
 
 #include "machine.h"
 
-#include "lame.h"
+#include "../include/lame.h"
 #include "tables.h"
 
 

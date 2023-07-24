@@ -54,7 +54,7 @@ char *strchr(), *strrchr();
 #endif
 
 
-#include "lame.h"
+#include "../include/lame.h"
 #include "machine.h"
 #include "encoder.h"
 #include "id3tag.h"
