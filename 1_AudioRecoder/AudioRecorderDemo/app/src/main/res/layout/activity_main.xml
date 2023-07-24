@@ -43,4 +43,11 @@
         android:layout_height="wrap_content"
         android:text="尝试Acc/MediaPlayer"
         android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/btnLameTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="尝试Lame"
+        android:textAllCaps="false" />
 </LinearLayout>

@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/libaudio" />
             <option value="$PROJECT_DIR$/libbase" />
+            <option value="$PROJECT_DIR$/liblame" />
             <option value="$PROJECT_DIR$/libutil" />
           </set>
         </option>

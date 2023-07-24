@@ -60,6 +60,15 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
                 )
             )
         }
+
+        binding.btnLameTest.setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    LameTestActivity::class.java
+                )
+            )
+        }
     }
 
 
