@@ -5,5 +5,12 @@ public class LameLoader {
         System.loadLibrary("LameLoader");
     }
 
-    public native String getLameVersion();
+    /**
+     * 获取Lame版本号
+     */
+    public native static String getLameVersion();
+
+    /**
+     * 初始化Lame*/
+
 }

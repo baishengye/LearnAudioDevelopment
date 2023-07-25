@@ -2414,6 +2414,7 @@ lame_init_old(lame_global_flags *gfp) {
 }
 
 
+/*用于初始化LAME音频编码器*/
 lame_global_flags *
 lame_init(void) {
     lame_global_flags * gfp;

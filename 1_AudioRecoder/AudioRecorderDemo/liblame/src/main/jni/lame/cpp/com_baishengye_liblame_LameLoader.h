@@ -13,7 +13,7 @@ extern "C" {
  * Signature: ()Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_com_baishengye_liblame_LameLoader_getLameVersion
-        (JNIEnv *, jobject);
+        (JNIEnv *, jclass clazz);
 
 #ifdef __cplusplus
 }
