@@ -476,9 +476,9 @@ struct lame_internal_flags {
      * To test that the structure is right and initialized, use:
      *     if ( gfc -> Class_ID == LAME_ID ) ...
      * Other remark:
-     *     If you set a flag to 0 for uninit data and 1 for init data, the right test
+     *     If you set a flag to 0 for uninit data and 1 for initLess data, the right test
      *     should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
-     *     of this element will be otherwise misinterpreted as an init.
+     *     of this element will be otherwise misinterpreted as an initLess.
      */
 #  define  LAME_ID   0xFFF88E3B
     unsigned long class_id;

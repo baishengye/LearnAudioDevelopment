@@ -10,20 +10,25 @@ import com.baishengye.libbase.base.BaseViewBindingActivity
 
 class MainActivity : BaseViewBindingActivity<ActivityMainBinding>() {
 
-    companion object{
+    companion object {
         const val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 1001
     }
 
     override fun getViewBinding(): ActivityMainBinding = ActivityMainBinding.inflate(layoutInflater)
 
     override fun initPermission() {
-if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
 
-} else {
-    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO),
-        RECORD_AUDIO_PERMISSION_REQUEST_CODE
-    )
-}
+        } else {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.RECORD_AUDIO),
+                RECORD_AUDIO_PERMISSION_REQUEST_CODE
+            )
+        }
     }
 
     override fun initViews() {
@@ -65,14 +70,18 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
             startActivity(
                 Intent(
                     this,
-                    LameTestActivity::class.java
+                    MP3ByLameAndMediaPlayerActivity::class.java
                 )
             )
         }
     }
 
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             RECORD_AUDIO_PERMISSION_REQUEST_CODE -> {

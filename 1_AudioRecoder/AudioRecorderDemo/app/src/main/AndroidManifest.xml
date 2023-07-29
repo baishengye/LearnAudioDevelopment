@@ -40,6 +40,9 @@
         <activity
             android:name=".AccByAudioRecordMediaCodecAndMediaPlayerActivity"
             android:exported="true" />
+        <activity
+            android:name=".MP3ByLameAndMediaPlayerActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

@@ -288,7 +288,7 @@ CRC_update(int value, int crc) {
 void
 CRC_writeheader(lame_internal_flags const *gfc, char *header) {
     SessionConfig_t const *const cfg = &gfc->cfg;
-    int crc = 0xffff;    /* (jo) init crc16 for error_protection */
+    int crc = 0xffff;    /* (jo) initLess crc16 for error_protection */
     int i;
 
     crc = CRC_update(((unsigned char *) header)[2], crc);
