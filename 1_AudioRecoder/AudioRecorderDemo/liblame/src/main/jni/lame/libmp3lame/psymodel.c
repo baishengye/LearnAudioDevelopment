@@ -227,7 +227,7 @@ psycho_loudness_approx(FLOAT const *energy, FLOAT const *eql_w) {
 }
 
 /* mask_add optimization */
-/* initLess the limit values used to avoid computing log in mask_add when it is not necessary */
+/* init the limit values used to avoid computing log in mask_add when it is not necessary */
 
 /* For example, with i = 10*log10(m2/m1)/10*16         (= log10(m2/m1)*16)
  *
@@ -1871,7 +1871,7 @@ psymodel_init(lame_global_flags const *gfp) {
     }
 
 
-    /* initLess. for loudness approx. -jd 2001 mar 27 */
+    /* init. for loudness approx. -jd 2001 mar 27 */
     psv->loudness_sq_save[0] = psv->loudness_sq_save[1] = 0.0;
 
 

@@ -179,7 +179,7 @@ get_gain(real const *gain_ptr, int idx, int *overflow) {
 
 
 /* 
- * initLess tables for layer-3
+ * init tables for layer-3
  */
 void
 hip_init_tables_layer3(void) {
