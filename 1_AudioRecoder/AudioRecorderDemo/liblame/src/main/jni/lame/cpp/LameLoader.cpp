@@ -8,7 +8,10 @@ using namespace std;
 extern "C" {
 #endif
 
+#define BUFFER_SIZE 8192
+
 static lame_global_flags *lameGlobalFlags = nullptr;
+
 
 /**
  * 获取Lame版本号
@@ -217,19 +220,57 @@ Java_com_baishengye_liblame_LameLoader_00024Companion_lameClose(JNIEnv *env, job
 }
 
 void
-Java_com_baishengye_liblame_LameLoader_00024Companion_initLess(JNIEnv *env, jobject clazz,
-                                                               jint in_sample_rate,
-                                                               jint out_channel,
-                                                               jint out_sample_rate,
-                                                               jint out_bitrate,
-                                                               jint quality) {
-    lameGlobalFlags = lame_init();
-    lame_set_in_samplerate(lameGlobalFlags, in_sample_rate);
-    lame_set_num_channels(lameGlobalFlags, out_channel);
-    lame_set_out_samplerate(lameGlobalFlags, out_sample_rate);
-    lame_set_brate(lameGlobalFlags, out_bitrate);
-    lame_set_quality(lameGlobalFlags, quality);
+Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3(JNIEnv *env, jobject clazz,
+                                                              jstring wav_path, jstring mp3_path) {
+    const char *wavPath = env->GetStringUTFChars(wav_path, nullptr);
+    const char *mp3Path = env->GetStringUTFChars(mp3_path, nullptr);
+    //open input file and output file
+    FILE *fInput = fopen(wavPath, "rb");
+    FILE *fMp3 = fopen(mp3Path, "wb");
+    short int inputBuffer[BUFFER_SIZE * 2];
+    unsigned char mp3Buffer[BUFFER_SIZE];//You must specified at least 7200
+    int read = 0; // number of bytes in inputBuffer, if in the end return 0
+    int write = 0;// number of bytes output in mp3buffer.  can be 0
+    long total = 0; // the bytes of reading input file
+    int nowConvertBytes = 0;
+
+    //convert to mp3
+    do {
+        read = static_cast<int>(fread(inputBuffer, sizeof(short int) * 2, BUFFER_SIZE, fInput));
+        total += read * sizeof(short int) * 2;
+        nowConvertBytes = total;
+        if (read != 0) {
+            write = lame_encode_buffer_interleaved(lameGlobalFlags, inputBuffer, read, mp3Buffer,
+                                                   BUFFER_SIZE);
+            //write the converted buffer to the file
+            fwrite(mp3Buffer, sizeof(unsigned char), static_cast<size_t>(write), fMp3);
+        }
+        //if in the end flush
+        if (read == 0) {
+            lame_encode_flush(lameGlobalFlags, mp3Buffer, BUFFER_SIZE);
+        }
+    } while (read != 0);
+
+    //release resources
+    if (lameGlobalFlags != nullptr) {
+        lame_close(lameGlobalFlags);
+        lameGlobalFlags = nullptr;
+    }
+    fclose(fInput);
+    fclose(fMp3);
+    env->ReleaseStringUTFChars(wav_path, wavPath);
+    env->ReleaseStringUTFChars(mp3_path, mp3Path);
+    nowConvertBytes = -1;
+}
+
+void
+Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3Speed(JNIEnv *env, jobject clazz,
+                                                                   jstring wav_path,
+                                                                   jstring mp3_path, jint speed) {
+    lame_set_out_samplerate(lameGlobalFlags, lame_get_out_samplerate(lameGlobalFlags) * speed);
     lame_init_params(lameGlobalFlags);
+
+    Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3(env, clazz, wav_path, mp3_path);
 }
 #ifdef __cplusplus
 }

@@ -81,17 +81,15 @@ class LameLoader {
             mp3buf: ByteArray
         ): Int
 
-        external fun initLess(
-            inSampleRate: Int,
-            outChannel: Int,
-            outSampleRate: Int,
-            outBitrate: Int,
-            quality: Int
-        )
-
         /**
          * 释放Lame*/
         external fun lameClose()
+
+        /**wav转mp3*/
+        external fun wav2mp3(wavPath: String, mp3Path: String)
+
+        /**wav转mp3的时候修改速度*/
+        external fun wav2mp3Speed(wavPath: String, mp3Path: String, speed: Int)
 
         ////UTILS
         private fun getIntForMode(mode: LameBuilder.Mode): Int {

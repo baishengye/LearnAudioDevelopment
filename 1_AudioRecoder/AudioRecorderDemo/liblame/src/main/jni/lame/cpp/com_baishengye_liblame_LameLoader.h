@@ -66,12 +66,14 @@ JNIEXPORT void JNICALL
 Java_com_baishengye_liblame_LameLoader_00024Companion_lameClose(JNIEnv *env, jobject clazz);
 
 JNIEXPORT void JNICALL
-Java_com_baishengye_liblame_LameLoader_00024Companion_initLess(JNIEnv *env, jobject clazz,
-                                                               jint in_sample_rate,
-                                                               jint out_channel,
-                                                               jint out_sample_rate,
-                                                               jint out_bitrate,
-                                                               jint quality);
+Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3(JNIEnv *env, jobject clazz,
+                                                              jstring wav_path, jstring mp3_path);
+
+
+JNIEXPORT void JNICALL
+Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3Speed(JNIEnv *env, jobject thiz,
+                                                                   jstring wav_path,
+                                                                   jstring mp3_path, jint speed);
 #ifdef __cplusplus
 }
 #endif
