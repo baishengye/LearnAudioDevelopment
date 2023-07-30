@@ -155,19 +155,16 @@ open class BaseAudioRecordHelper @RequiresPermission(Manifest.permission.RECORD_
             audioRecord = null
         }
         if (outputStream != null) {
-            try {
-                outputStream!!.flush()
-                outputStream!!.close()
-                outputStream = null
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
+            outputStream = null
         }
     }
 
     private fun stopAudioRecord() {
         if (audioRecord != null) {
             audioRecord!!.stop()
+        }
+        if (outputStream != null) {
+            outputStream = null
         }
     }
 }

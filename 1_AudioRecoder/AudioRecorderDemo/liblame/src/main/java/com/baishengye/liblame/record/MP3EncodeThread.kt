@@ -6,6 +6,7 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import com.baishengye.liblame.LameLoader
+import java.io.IOException
 import java.io.OutputStream
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -89,6 +90,17 @@ class MP3EncodeThread(threadName: String) : HandlerThread(threadName),
                 LameLoader.lameClose()
             }
         }
+
+        if (outputStream != null) {
+            try {
+                outputStream!!.flush()
+                outputStream!!.close()
+                outputStream = null
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+
     }
 
     /**
