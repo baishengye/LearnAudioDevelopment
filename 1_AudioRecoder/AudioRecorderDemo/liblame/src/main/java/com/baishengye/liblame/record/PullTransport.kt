@@ -102,7 +102,7 @@ interface PullTransport {
     }
 
     class Mp3PullTransport(private val config: PcmEncodeConfig) : AbstractPullTransport() {
-        val encode: MP3EncodeThread = MP3EncodeThread("MP3EncodeThread")
+        var encode: MP3EncodeThread? = null
 
         override fun startPoolingAndWriting(
             audioRecord: AudioRecord,
@@ -115,15 +115,15 @@ interface PullTransport {
                 .setOutChannels(config.channels())
                 .setOutSampleRate(config.sampleRateInHz)
                 .setOutBitrate(128)
-                .setQuality(7).initLame()
+                .setQuality(1).initLame()
 
 //            LameLoader.initLess(config.sampleRateInHz,config.channels(),config.sampleRateInHz,128,7)
+            encode = MP3EncodeThread("MP3EncodeThread")
+            encode?.setOutputStream(outputStream)
+            encode?.setBufferSize(pullSizeInBytes)
+            encode?.start()
 
-            encode.setOutputStream(outputStream)
-            encode.setBufferSize(pullSizeInBytes)
-            encode.start()
-
-            audioRecord.setRecordPositionUpdateListener(encode, encode.stopHandler)
+            audioRecord.setRecordPositionUpdateListener(encode, encode?.stopHandler)
             audioRecord.positionNotificationPeriod = config.simplePreNotify
 
             val pcmData = ShortArray(pullSizeInBytes)
@@ -132,13 +132,14 @@ interface PullTransport {
                 val count = audioRecord.read(pcmData, 0, pullSizeInBytes)
                 if (AudioRecord.ERROR_INVALID_OPERATION != count && AudioRecord.ERROR_BAD_VALUE != count) {
                     val audioChunk = AudioChunk.Shorts(pcmData, count)
-                    encode.addData(audioChunk)
+                    encode?.addData(audioChunk)
                     postPullDataEvent(audioChunk) // 推送原始音频数据块
                 } else {
-                    encode.stopThread()
                     postPullEndEvent.invoke(true)
                 }
             }
+            encode?.stopThread()
+            encode = null
         }
 
     }

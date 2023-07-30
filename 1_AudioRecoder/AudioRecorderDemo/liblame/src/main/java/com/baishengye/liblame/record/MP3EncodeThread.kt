@@ -3,6 +3,7 @@ package com.baishengye.liblame.record
 import android.media.AudioRecord
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.Message
 import com.baishengye.liblame.LameLoader
 import java.io.OutputStream
@@ -14,9 +15,15 @@ class MP3EncodeThread(threadName: String) : HandlerThread(threadName),
 
     companion object {
         const val STOP_THREAD_WHAT = 1001
+
+        const val DATA_STOP = 1002
+        const val DATA_IDLE = 1003
+        const val DATA_PROGRESSING = 1004
     }
 
     private var mp3Buffer: ByteArray? = null
+
+    private var dataState = DATA_IDLE
 
     private var outputStream: OutputStream? = null
 
@@ -25,8 +32,8 @@ class MP3EncodeThread(threadName: String) : HandlerThread(threadName),
         dataQueue.offer(audioChunk)
     }
 
-    internal class StopHandler(encodeThread: MP3EncodeThread) :
-        Handler() {
+    inner class StopHandler(looper: Looper, encodeThread: MP3EncodeThread) :
+        Handler(looper) {
         var encodeThread: WeakReference<MP3EncodeThread>
 
         init {
@@ -42,13 +49,26 @@ class MP3EncodeThread(threadName: String) : HandlerThread(threadName),
                 // Cancel any event left in the queue
                 removeCallbacksAndMessages(null)
                 threadRef?.flushAndRelease()
-                looper.quit()
+
+                dataState = DATA_STOP
             }
             super.handleMessage(msg)
         }
     }
 
-    val stopHandler: Handler = StopHandler(this)
+    var stopHandler: Handler? = null
+
+    override fun run() {
+        super.run()
+
+        stopHandler = StopHandler(this.looper, this)
+
+        while (true) {
+            if (dataState == DATA_STOP) {
+                break
+            }
+        }
+    }
 
     override fun onMarkerReached(recorder: AudioRecord?) {}
 
@@ -77,7 +97,8 @@ class MP3EncodeThread(threadName: String) : HandlerThread(threadName),
     fun progressData(): Boolean {
         val chunk = dataQueue.poll()
         chunk?.let { audioChunk ->
-            val encodeSize = LameLoader.lameEncodeBufferInterleaved(
+            val encodeSize = LameLoader.lameEncodeBuffer(
+                audioChunk.toShorts(),
                 audioChunk.toShorts(),
                 audioChunk.size(),
                 mp3Buffer!!
@@ -98,7 +119,7 @@ class MP3EncodeThread(threadName: String) : HandlerThread(threadName),
     }
 
     fun stopThread() {
-        stopHandler.sendEmptyMessage(STOP_THREAD_WHAT)
+        stopHandler?.sendEmptyMessage(STOP_THREAD_WHAT)
     }
 
     fun setBufferSize(pullSizeInBytes: Int) {

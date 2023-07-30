@@ -23,7 +23,7 @@ open class PcmEncodeConfig(
      * 编码格式
      * - [AudioEncodingFormat]
      * */
-    var audioEncodingFormat: AudioEncodingFormat = AudioEncodingFormat.PCM_16BIT_STEREO,
+    var audioEncodingFormat: AudioEncodingFormat = AudioEncodingFormat.PCM_16BIT_MONO,
 
 
     /**
