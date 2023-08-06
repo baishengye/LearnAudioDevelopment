@@ -1,114 +1,198 @@
 package com.baishengye.liblame
 
-import com.baishengye.liblame.LameBuilder.VbrMode
+import java.io.IOException
+import java.io.InputStream
 
-class LameLoader {
+object LameLoader {
 
-    companion object {
-        init {
-            System.loadLibrary("LameLoader")
+    private const val MP3_BUFFER_SIZE = 1024
+    const val LAME_PRESET_DEFAULT = 0
+    const val LAME_PRESET_MEDIUM = 1
+    const val LAME_PRESET_STANDARD = 2
+    const val LAME_PRESET_EXTREME = 3
+
+    external fun getLameVersion(): String
+
+    external fun initializeEncoder(
+        sampleRate: Int,
+        numChannels: Int,
+        outSampleRate: Int,
+        outBitrate: Int,
+        quality: Int,
+    ): Int
+
+    external fun setEncoderPreset(preset: Int)
+
+    external fun encode(
+        leftChannel: ShortArray?,
+        rightChannel: ShortArray?, channelSamples: Int, mp3Buffer: ByteArray?,
+        bufferSize: Int
+    ): Int
+
+    external fun flushEncoder(mp3Buffer: ByteArray?, bufferSize: Int): Int
+
+    external fun closeEncoder(): Int
+
+    external fun initializeDecoder(): Int
+
+    external fun getDecoderSampleRate(): Int
+
+    external fun getDecoderChannels(): Int
+
+    external fun getDecoderDelay(): Int
+
+    external fun getDecoderPadding(): Int
+
+    external fun getDecoderTotalFrames(): Int
+
+    external fun getDecoderFrameSize(): Int
+
+    external fun getDecoderBitrate(): Int
+
+    @Throws(IOException::class)
+    fun configureDecoder(input: InputStream): Int {
+        var size = 100
+        val id3Length: Long
+        val aidLength: Long
+        val buf = ByteArray(size)
+        if (input.read(buf, 0, 4) != 4) {
+            return -1
         }
-
-        fun initialize(builder: LameBuilder) {
-            initLame(
-                builder.inSampleRate,
-                builder.outChannel,
-                builder.outSampleRate,
-                builder.outBitrate,
-                builder.scaleInput,
-                getIntForMode(builder.mode),
-                getIntForVbrMode(builder.vbrMode),
-                builder.quality,
-                builder.vbrQuality,
-                builder.abrMeanBitrate,
-                builder.lowpassFreq,
-                builder.highpassFreq,
-                builder.id3tagTitle,
-                builder.id3tagArtist,
-                builder.id3tagAlbum,
-                builder.id3tagYear,
-                builder.id3tagComment
-            );
-        }
-
-        /**
-         * 获取Lame版本号
-         */
-        external fun getLameVersion(): String?
-
-        /**
-         * 以默认参数初始化Lame
-         */
-        external fun initLameDefault(): Int
-
-        /**
-         * 配置参数初始化Lame*/
-        external fun initLame(
-            inSampleRate: Int,//输入采样率
-            outChannel: Int,//输出声道数
-            outSampleRate: Int,//输出采样率
-            outBitrate: Int,//输出比特率
-            scaleInput: Float,//缩放比
-            mode: Int,//声道模式
-            vbrMode: Int,//VBR模式
-            quality: Int,//质量
-            vbrQuality: Int,//VBR质量
-            abrMeanBitrate: Int,//平均比特率
-            lowpassFreq: Int,//低通滤波器
-            highpassFreq: Int,//高通滤波器
-            id3tagTitle: String?,//标题
-            id3tagArtist: String?,//艺术家
-            id3tagAlbum: String?,//专辑
-            id3tagYear: String?,//年份
-            id3tagComment: String?//备注
-        ): Int
-
-        /**
-         * 清理Lame缓冲区里的PCM数据，全部转成MP3帧*/
-        external fun lameEncodeFlush(mp3buf: ByteArray): Int
-
-        /**
-         * 编码->mp3*/
-        external fun lameEncodeBuffer(
-            buffer_l: ShortArray, buffer_r: ShortArray,
-            samples: Int, mp3buf: ByteArray
-        ): Int
-
-        /**
-         * （左右双通道混合）编码->mp3*/
-        external fun lameEncodeBufferInterleaved(
-            pcm: ShortArray, samples: Int,
-            mp3buf: ByteArray
-        ): Int
-
-        /**
-         * 释放Lame*/
-        external fun lameClose()
-
-        /**wav转mp3*/
-        external fun wav2mp3(wavPath: String, mp3Path: String)
-
-        /**wav转mp3的时候修改速度*/
-        external fun wav2mp3Speed(wavPath: String, mp3Path: String, speed: Int)
-
-        ////UTILS
-        private fun getIntForMode(mode: LameBuilder.Mode): Int {
-            return when (mode) {
-                LameBuilder.Mode.STEREO -> 0
-                LameBuilder.Mode.JSTEREO -> 1
-                LameBuilder.Mode.MONO -> 3
-                LameBuilder.Mode.DEFAULT -> 4
+        if (isId3Header(buf)) {
+            // ID3 header found, skip past it
+            if (input.read(buf, 0, 6) != 6) {
+                return -1
+            }
+            buf[2] = (buf[2].toInt() and 0x7F).toByte()
+            buf[3] = (buf[3].toInt() and 0x7F).toByte()
+            buf[4] = (buf[4].toInt() and 0x7F).toByte()
+            buf[5] = (buf[5].toInt() and 0x7F).toByte()
+            id3Length = ((((buf[2].toInt() shl 7) + buf[3] shl 7) + buf[4] shl 7) + buf[5]).toLong()
+            input.skip(id3Length)
+            if (input.read(buf, 0, 4) != 4) {
+                return -1
             }
         }
-
-        private fun getIntForVbrMode(mode: VbrMode): Int {
-            return when (mode) {
-                VbrMode.VBR_OFF -> 0
-                VbrMode.VBR_RH -> 2
-                VbrMode.VBR_ABR -> 3
-                VbrMode.VBR_MTRH -> 4
-                VbrMode.VBR_DEFAULT -> 6
+        if (isAidHeader(buf)) {
+            // AID header found, skip past it too
+            if (input.read(buf, 0, 2) != 2) {
+                return -1
+            }
+            aidLength = (buf[0] + 256 * buf[1]).toLong()
+            input.skip(aidLength)
+            if (input.read(buf, 0, 4) != 4) {
+                return -1
             }
         }
+        while (!isMp123SyncWord(buf)) {
+            // search for MP3 syncword one byte at a time
+            for (i in 0..2) {
+                buf[i] = buf[i + 1]
+            }
+            val `val`: Int = input.read()
+            if (`val` == -1) {
+                return -1
+            }
+            buf[3] = `val`.toByte()
+        }
+        do {
+            size = input.read(buf)
+            if (nativeConfigureDecoder(buf, size) == 0) {
+                return 0
+            }
+        } while (size > 0)
+        return -1
     }
+
+    private fun isId3Header(buf: ByteArray): Boolean {
+        return buf[0] == 'I'.code.toByte() && buf[1] == 'D'.code.toByte() && buf[2] == '3'.code.toByte()
+    }
+
+    private fun isAidHeader(buf: ByteArray): Boolean {
+        return buf[0] == 'A'.code.toByte() && buf[1] == 'i'.code.toByte() && buf[2] == 'D'.code.toByte() && buf[3] == '\u0001'.code.toByte()
+    }
+
+    private fun isMp123SyncWord(buf: ByteArray): Boolean {
+        val abl2 = charArrayOf(
+            0.toChar(),
+            7.toChar(),
+            7.toChar(),
+            7.toChar(),
+            0.toChar(),
+            7.toChar(),
+            0.toChar(),
+            0.toChar(),
+            0.toChar(),
+            0.toChar(),
+            0.toChar(),
+            8.toChar(),
+            8.toChar(),
+            8.toChar(),
+            8.toChar(),
+            8.toChar()
+        )
+        if (buf[0].toInt() and 0xFF != 0xFF) {
+            return false
+        }
+        if (buf[1].toInt() and 0xE0 != 0xE0) {
+            return false
+        }
+        if (buf[1].toInt() and 0x18 == 0x08) {
+            return false
+        }
+        if (buf[1].toInt() and 0x06 == 0x00) {
+            // not layer I/II/III
+            return false
+        }
+        if (buf[2].toInt() and 0xF0 == 0xF0) {
+            // bad bitrate
+            return false
+        }
+        if (buf[2].toInt() and 0x0C == 0x0C) {
+            // bad sample frequency
+            return false
+        }
+        if ((buf[1].toInt() and 0x18 == 0x18) && (buf[1].toInt() and 0x06 == 0x04) && (abl2[buf[2].toInt() shr 4].code and (1 shl (buf[3].toInt() shr 6)) != 0)) {
+            return false
+        }
+        return buf[3].toInt() and 0x03 != 2
+    }
+
+    private external fun nativeConfigureDecoder(inputBuffer: ByteArray, bufferSize: Int): Int
+
+    @Throws(IOException::class)
+    fun decodeFrame(
+        input: InputStream,
+        pcmLeft: ShortArray, pcmRight: ShortArray
+    ): Int {
+        var len = 0
+        var samplesRead = 0
+        val buf = ByteArray(MP3_BUFFER_SIZE)
+
+        // check for buffered data
+        samplesRead = nativeDecodeFrame(buf, len, pcmLeft, pcmRight)
+        if (samplesRead != 0) {
+            return samplesRead
+        }
+        while (true) {
+            len = input.read(buf)
+            if (len == -1) {
+                // finished reading input buffer, check for buffered data
+                samplesRead = nativeDecodeFrame(buf, len, pcmLeft, pcmRight)
+                break
+            }
+            samplesRead = nativeDecodeFrame(buf, len, pcmLeft, pcmRight)
+            if (samplesRead > 0) {
+                break
+            }
+        }
+        return samplesRead
+    }
+
+    private external fun nativeDecodeFrame(
+        inputBuffer: ByteArray, bufferSize: Int,
+        pcmLeft: ShortArray, pcmRight: ShortArray
+    ): Int
+
+    external fun closeDecoder(): Int
 }

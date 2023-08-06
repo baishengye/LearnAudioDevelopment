@@ -77,7 +77,7 @@ aux_source_directory(src/main/jni/lame/libmp3lame/i386 I386)
 aux_source_directory(src/main/jni/lame/libmp3lame/vector VECTOR)
 add_library(LameLoader SHARED
         src/main/jni/lame/cpp/LameLoader.cpp
-        src/main/jni/lame/cpp/com_baishengye_liblame_LameLoader.h
+        src/main/jni/lame/cpp/LameLoader.h
         ${LIB_MP3_LAME}
         ${MPG_LIB}
         ${I386}

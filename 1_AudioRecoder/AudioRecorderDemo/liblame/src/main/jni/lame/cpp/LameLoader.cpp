@@ -1,6 +1,11 @@
-#include <string>
+/*****************************************************************************/
+#include "LameLoader.h"
 #include "../include/lame.h"
-#include "com_baishengye_liblame_LameLoader.h"
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+#include <cstdio>
+#include <android/log.h>
 
 using namespace std;
 
@@ -8,270 +13,257 @@ using namespace std;
 extern "C" {
 #endif
 
-#define BUFFER_SIZE 8192
 
-static lame_global_flags *lameGlobalFlags = nullptr;
-
+static lame_global_flags *lame_context;
+static hip_t hip_context;
+static mp3data_struct *mp3data;
+static int enc_delay, enc_padding;
 
 /**
  * 获取Lame版本号
  * @return 版本号*/
 jstring
-Java_com_baishengye_liblame_LameLoader_00024Companion_getLameVersion(JNIEnv *env, jobject clazz) {
+Java_com_baishengye_liblame_LameLoader_getLameVersion(JNIEnv *env, jobject clazz) {
     return env->NewStringUTF(get_lame_version());
 }
 
-/**
- * 默认方式初始化Lame
- * @return  -1：初始化失败*/
-jint
-Java_com_baishengye_liblame_LameLoader_00024Companion_initLameDefault(JNIEnv *env, jobject clazz) {
-    lameGlobalFlags = lame_init();
-    return lame_init_params(lameGlobalFlags);
+
+jint Java_com_baishengye_liblame_LameLoader_initializeEncoder(JNIEnv *env, jobject clazz,
+                                                              jint in_sample_rate,
+                                                              jint num_channels,
+                                                              jint out_sample_rate,
+                                                              jint out_bitrate,
+                                                              jint quality) {
+    if (!lame_context) {
+        lame_context = lame_init();
+        if (lame_context) {
+            lame_set_in_samplerate(lame_context, in_sample_rate);
+            lame_set_num_channels(lame_context, num_channels);
+            lame_set_out_samplerate(lame_context, out_sample_rate);
+            lame_set_brate(lame_context, out_bitrate);
+            lame_set_quality(lame_context, quality);
+            int ret = lame_init_params(lame_context);
+            __android_log_print(ANDROID_LOG_DEBUG, "LameLoader.so", "initialized lame with code %d",
+                                ret);
+            return ret;
+        }
+    }
+    return -1;
 }
 
-/**配置参数初始化Lame*/
-jint
-Java_com_baishengye_liblame_LameLoader_00024Companion_initLame(JNIEnv *env, jobject clazz,
-                                                               jint in_sample_rate,
-                                                               jint out_channel,
-                                                               jint out_sample_rate,
-                                                               jint out_bitrate,
-                                                               jfloat scale_input,
-                                                               jint mode,
-                                                               jint vbr_mode,
-                                                               jint quality,
-                                                               jint vbr_quality,
-                                                               jint abr_mean_bitrate,
-                                                               jint lowpass_freq,
-                                                               jint highpass_freq,
-                                                               jstring id3tag_title,
-                                                               jstring id3tag_artist,
-                                                               jstring id3tag_album,
-                                                               jstring id3tag_year,
-                                                               jstring id3tag_comment) {
-    lameGlobalFlags = lame_init();
-    lame_set_in_samplerate(lameGlobalFlags, in_sample_rate);
-    lame_set_num_channels(lameGlobalFlags, out_channel);
-    lame_set_out_samplerate(lameGlobalFlags, out_sample_rate);
-    lame_set_brate(lameGlobalFlags, out_bitrate);
-    lame_set_quality(lameGlobalFlags, quality);
-    lame_set_scale(lameGlobalFlags, scale_input);
-    lame_set_VBR_q(lameGlobalFlags, vbr_quality);
-    lame_set_VBR_mean_bitrate_kbps(lameGlobalFlags, abr_mean_bitrate);
-    lame_set_lowpassfreq(lameGlobalFlags, lowpass_freq);
-    lame_set_highpassfreq(lameGlobalFlags, highpass_freq);
 
-    switch (mode) {
-        case 0:
-            lame_set_mode(lameGlobalFlags, STEREO);
+void Java_com_baishengye_liblame_LameLoader_setEncoderPreset
+        (JNIEnv *env, jobject clazz, jint preset) {
+    switch (preset) {
+        case baishengye_liblame_LameLoader_LAME_PRESET_MEDIUM:
+            lame_set_VBR_q(lame_context, 4);
+            lame_set_VBR(lame_context, vbr_rh);
             break;
-        case 1:
-            lame_set_mode(lameGlobalFlags, JOINT_STEREO);
+        case baishengye_liblame_LameLoader_LAME_PRESET_STANDARD:
+            lame_set_VBR_q(lame_context, 2);
+            lame_set_VBR(lame_context, vbr_rh);
             break;
-        case 3:
-            lame_set_mode(lameGlobalFlags, MONO);
+        case baishengye_liblame_LameLoader_LAME_PRESET_EXTREME:
+            lame_set_VBR_q(lame_context, 0);
+            lame_set_VBR(lame_context, vbr_rh);
             break;
-        case 4:
-            lame_set_mode(lameGlobalFlags, NOT_SET);
-            break;
+        case baishengye_liblame_LameLoader_LAME_PRESET_DEFAULT:
         default:
-            lame_set_mode(lameGlobalFlags, NOT_SET);
             break;
     }
-
-    switch (vbr_mode) {
-        case 0:
-            lame_set_VBR(lameGlobalFlags, vbr_off);
-            break;
-        case 2:
-            lame_set_VBR(lameGlobalFlags, vbr_rh);
-            break;
-        case 3:
-            lame_set_VBR(lameGlobalFlags, vbr_abr);
-            break;
-        case 4:
-            lame_set_VBR(lameGlobalFlags, vbr_mtrh);
-            break;
-        case 6:
-            lame_set_VBR(lameGlobalFlags, vbr_default);
-            break;
-        default:
-            lame_set_VBR(lameGlobalFlags, vbr_off);
-            break;
-
-    }
-
-    const jchar *title = nullptr;
-    const jchar *artist = nullptr;
-    const jchar *album = nullptr;
-    const jchar *year = nullptr;
-    const jchar *comment = nullptr;
-    if (id3tag_title) {
-        title = env->GetStringChars(id3tag_title, nullptr);
-    }
-    if (id3tag_artist) {
-        artist = env->GetStringChars(id3tag_artist, nullptr);
-    }
-    if (id3tag_album) {
-        album = env->GetStringChars(id3tag_album, nullptr);
-    }
-    if (id3tag_year) {
-        year = env->GetStringChars(id3tag_year, nullptr);
-    }
-    if (id3tag_comment) {
-        comment = env->GetStringChars(id3tag_comment, nullptr);
-    }
-
-    if (title || artist || album || year || comment) {
-        id3tag_init(lameGlobalFlags);
-
-        if (title != nullptr) {
-            id3tag_set_title(lameGlobalFlags, (const char *) title);
-            env->ReleaseStringChars(id3tag_title, title);
-        }
-        if (artist != nullptr) {
-            id3tag_set_artist(lameGlobalFlags, (const char *) artist);
-            env->ReleaseStringChars(id3tag_artist, artist);
-        }
-        if (album != nullptr) {
-            id3tag_set_album(lameGlobalFlags, (const char *) album);
-            env->ReleaseStringChars(id3tag_album, album);
-        }
-        if (year != nullptr) {
-            id3tag_set_year(lameGlobalFlags, (const char *) year);
-            env->ReleaseStringChars(id3tag_year, year);
-        }
-        if (comment != nullptr) {
-            id3tag_set_comment(lameGlobalFlags, (const char *) comment);
-            env->ReleaseStringChars(id3tag_comment, comment);
-        }
-    }
-
-    return lame_init_params(lameGlobalFlags);
 }
 
-/*回收lame的编码缓冲区
- * 返回值是回收时缓冲区中的MP3数据Bytes*/
-jint
-Java_com_baishengye_liblame_LameLoader_00024Companion_lameEncodeFlush(JNIEnv *env, jobject clazz,
-                                                                      jbyteArray mp3buf) {
-    const jsize mp3buf_size = env->GetArrayLength(mp3buf);
-    jbyte *j_mp3buf = env->GetByteArrayElements(mp3buf, nullptr);
 
-    int result = lame_encode_flush(lameGlobalFlags, (u_char *) j_mp3buf, mp3buf_size);
+jint Java_com_baishengye_liblame_LameLoader_encode
+        (JNIEnv *env, jobject clazz, jshortArray leftChannel, jshortArray rightChannel,
+         jint channelSamples, jbyteArray mp3Buffer, jint bufferSize) {
+    int encoded_samples;
+    short *left_buf, *right_buf;
+    jbyte *mp3_buf;
 
-    env->ReleaseByteArrayElements(mp3buf, j_mp3buf, 0);
+    left_buf = env->GetShortArrayElements(leftChannel, nullptr);
+    right_buf = env->GetShortArrayElements(rightChannel, nullptr);
+    mp3_buf = env->GetByteArrayElements(mp3Buffer, nullptr);
 
-    return result;
-}
+    encoded_samples = lame_encode_buffer(lame_context, left_buf, right_buf, channelSamples,
+                                         (unsigned char *) mp3_buf, bufferSize);
 
-/*
- * 编码*/
-jint
-Java_com_baishengye_liblame_LameLoader_00024Companion_lameEncodeBuffer(JNIEnv *env, jobject clazz,
-                                                                       jshortArray buffer_l,
-                                                                       jshortArray buffer_r,
-                                                                       jint samples,
-                                                                       jbyteArray mp3buf) {
-    jshort *j_buffer_l = env->GetShortArrayElements(buffer_l, nullptr);
+// mode 0 means free left/right buf, write changes back to left/rightChannel
+    env->ReleaseShortArrayElements(leftChannel, left_buf, 0);
+    env->ReleaseShortArrayElements(rightChannel, right_buf, 0);
 
-    jshort *j_buffer_r = env->GetShortArrayElements(buffer_r, nullptr);
-
-    const jsize mp3buf_size = env->GetArrayLength(mp3buf);
-    jbyte *j_mp3buf = env->GetByteArrayElements(mp3buf, nullptr);
-
-    int result = lame_encode_buffer(lameGlobalFlags, j_buffer_l, j_buffer_r,
-                                    samples, (u_char *) j_mp3buf, mp3buf_size);
-
-    env->ReleaseShortArrayElements(buffer_l, j_buffer_l, 0);
-    env->ReleaseShortArrayElements(buffer_r, j_buffer_r, 0);
-    env->ReleaseByteArrayElements(mp3buf, j_mp3buf, 0);
-
-    return result;
-}
-
-/*左右声道混合编码*/
-jint
-Java_com_baishengye_liblame_LameLoader_00024Companion_lameEncodeBufferInterleaved(JNIEnv *env,
-                                                                                  jobject clazz,
-                                                                                  jshortArray pcm,
-                                                                                  jint samples,
-                                                                                  jbyteArray mp3buf) {
-    jshort *j_pcm = env->GetShortArrayElements(pcm, nullptr);
-
-    const jsize mp3buf_size = env->GetArrayLength(mp3buf);
-    jbyte *j_mp3buf = env->GetByteArrayElements(mp3buf, nullptr);
-
-    int result = lame_encode_buffer_interleaved(lameGlobalFlags, j_pcm,
-                                                samples, (u_char *) j_mp3buf, mp3buf_size);
-
-    env->ReleaseShortArrayElements(pcm, j_pcm, 0);
-    env->ReleaseByteArrayElements(mp3buf, j_mp3buf, 0);
-
-    return result;
-}
-
-/*销毁Lame*/
-void
-Java_com_baishengye_liblame_LameLoader_00024Companion_lameClose(JNIEnv *env, jobject clazz) {
-    lame_close(lameGlobalFlags);
-    lameGlobalFlags = nullptr;
-}
-
-void
-Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3(JNIEnv *env, jobject clazz,
-                                                              jstring wav_path, jstring mp3_path) {
-    const char *wavPath = env->GetStringUTFChars(wav_path, nullptr);
-    const char *mp3Path = env->GetStringUTFChars(mp3_path, nullptr);
-    //open input file and output file
-    FILE *fInput = fopen(wavPath, "rb");
-    FILE *fMp3 = fopen(mp3Path, "wb");
-    short int inputBuffer[BUFFER_SIZE * 2];
-    unsigned char mp3Buffer[BUFFER_SIZE];//You must specified at least 7200
-    int read = 0; // number of bytes in inputBuffer, if in the end return 0
-    int write = 0;// number of bytes output in mp3buffer.  can be 0
-    long total = 0; // the bytes of reading input file
-    int nowConvertBytes = 0;
-
-    //convert to mp3
-    do {
-        read = static_cast<int>(fread(inputBuffer, sizeof(short int) * 2, BUFFER_SIZE, fInput));
-        total += read * sizeof(short int) * 2;
-        nowConvertBytes = total;
-        if (read != 0) {
-            write = lame_encode_buffer_interleaved(lameGlobalFlags, inputBuffer, read, mp3Buffer,
-                                                   BUFFER_SIZE);
-            //write the converted buffer to the file
-            fwrite(mp3Buffer, sizeof(unsigned char), static_cast<size_t>(write), fMp3);
-        }
-        //if in the end flush
-        if (read == 0) {
-            lame_encode_flush(lameGlobalFlags, mp3Buffer, BUFFER_SIZE);
-        }
-    } while (read != 0);
-
-    //release resources
-    if (lameGlobalFlags != nullptr) {
-        lame_close(lameGlobalFlags);
-        lameGlobalFlags = nullptr;
+    if (encoded_samples < 0) {
+// don't propagate changes back up if we failed
+        env->ReleaseByteArrayElements(mp3Buffer, mp3_buf, JNI_ABORT);
+        return -1;
     }
-    fclose(fInput);
-    fclose(fMp3);
-    env->ReleaseStringUTFChars(wav_path, wavPath);
-    env->ReleaseStringUTFChars(mp3_path, mp3Path);
-    nowConvertBytes = -1;
+
+    env->ReleaseByteArrayElements(mp3Buffer, mp3_buf, 0);
+    return encoded_samples;
 }
 
-void
-Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3Speed(JNIEnv *env, jobject clazz,
-                                                                   jstring wav_path,
-                                                                   jstring mp3_path, jint speed) {
-    lame_set_out_samplerate(lameGlobalFlags, lame_get_out_samplerate(lameGlobalFlags) * speed);
-    lame_init_params(lameGlobalFlags);
 
-    Java_com_baishengye_liblame_LameLoader_00024Companion_wav2mp3(env, clazz, wav_path, mp3_path);
+jint Java_com_baishengye_liblame_LameLoader_flushEncoder
+        (JNIEnv *env, jobject clazz, jbyteArray mp3Buffer, jint bufferSize) {
+// call lame_encode_flush when near the end of pcm buffer
+    int num_bytes;
+    jbyte *mp3_buf;
+
+    mp3_buf = env->GetByteArrayElements(mp3Buffer, nullptr);
+
+    num_bytes = lame_encode_flush(lame_context, (unsigned char *) mp3_buf, bufferSize);
+    if (num_bytes < 0) {
+// some kind of error occurred, don't propagate changes to buffer
+        env->ReleaseByteArrayElements(mp3Buffer, mp3_buf, JNI_ABORT);
+        return num_bytes;
+    }
+
+    env->ReleaseByteArrayElements(mp3Buffer, mp3_buf, 0);
+    return num_bytes;
 }
+
+
+jint Java_com_baishengye_liblame_LameLoader_closeEncoder
+        (JNIEnv *env, jobject clazz) {
+    if (lame_context) {
+        int ret = lame_close(lame_context);
+        lame_context = nullptr;
+        __android_log_print(ANDROID_LOG_DEBUG, "LameLoader.so", "freed lame with code %d", ret);
+        return ret;
+    }
+    return -1;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_initializeDecoder
+        (JNIEnv *env, jobject clazz) {
+    if (!hip_context) {
+        hip_context = hip_decode_init();
+        if (hip_context) {
+            mp3data = (mp3data_struct *) malloc(sizeof(mp3data_struct));
+            memset(mp3data, 0, sizeof(mp3data_struct));
+            enc_delay = -1;
+            enc_padding = -1;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_nativeConfigureDecoder
+        (JNIEnv *env, jobject clazz, jbyteArray mp3Buffer, jint bufferSize) {
+    int ret = -1;
+    short left_buf[1152], right_buf[1152];
+    jbyte *mp3_buf;
+
+    if (mp3data) {
+        mp3_buf = env->GetByteArrayElements(mp3Buffer, nullptr);
+        if (mp3data->header_parsed) {
+            mp3data->totalframes = mp3data->nsamp / mp3data->framesize;
+            ret = 0;
+            __android_log_print(ANDROID_LOG_DEBUG, "LameLoader.so",
+                                "decoder configured successfully");
+            __android_log_print(ANDROID_LOG_DEBUG, "LameLoader.so", "sample rate: %d, channels: %d",
+                                mp3data->samplerate, mp3data->stereo);
+            __android_log_print(ANDROID_LOG_DEBUG, "LameLoader.so", "bitrate: %d, frame size: %d",
+                                mp3data->bitrate, mp3data->framesize);
+        } else {
+            ret = -1;
+        }
+        env->ReleaseByteArrayElements(mp3Buffer, mp3_buf, 0);
+    }
+
+    return ret;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderChannels
+        (JNIEnv *env, jobject clazz) {
+    return mp3data->stereo;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderSampleRate
+        (JNIEnv *env, jobject clazz) {
+    return mp3data->samplerate;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderDelay
+        (JNIEnv *env, jobject clazz) {
+    return enc_delay;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderPadding
+        (JNIEnv *env, jobject clazz) {
+    return enc_padding;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderTotalFrames
+        (JNIEnv *env, jobject clazz) {
+    return mp3data->totalframes;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderFrameSize
+        (JNIEnv *env, jobject clazz) {
+    return mp3data->framesize;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_getDecoderBitrate
+        (JNIEnv *env, jobject clazz) {
+    return mp3data->bitrate;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_nativeDecodeFrame
+        (JNIEnv *env, jobject clazz, jbyteArray mp3Buffer, jint bufferSize,
+         jshortArray rightChannel, jshortArray leftChannel) {
+    int samples_read;
+    short *left_buf, *right_buf;
+    jbyte *mp3_buf;
+
+    left_buf = env->GetShortArrayElements(leftChannel, nullptr);
+    right_buf = env->GetShortArrayElements(rightChannel, nullptr);
+    mp3_buf = env->GetByteArrayElements(mp3Buffer, nullptr);
+
+    samples_read = hip_decode1_headers(hip_context, (unsigned char *) mp3_buf, bufferSize, left_buf,
+                                       right_buf, mp3data);
+
+    env->ReleaseByteArrayElements(mp3Buffer, mp3_buf, 0);
+
+    if (samples_read < 0) {
+// some sort of error occurred, don't propagate changes to buffers
+        env->ReleaseShortArrayElements(leftChannel, left_buf, JNI_ABORT);
+        env->ReleaseShortArrayElements(rightChannel, right_buf, JNI_ABORT);
+        return samples_read;
+    }
+
+    env->ReleaseShortArrayElements(leftChannel, left_buf, 0);
+    env->ReleaseShortArrayElements(rightChannel, right_buf, 0);
+
+    return samples_read;
+}
+
+
+jint Java_com_baishengye_liblame_LameLoader_closeDecoder
+        (JNIEnv *env, jobject clazz) {
+    if (hip_context) {
+        int ret = hip_decode_exit(hip_context);
+        hip_context = nullptr;
+        free(mp3data);
+        mp3data = nullptr;
+        enc_delay = -1;
+        enc_padding = -1;
+        return ret;
+    }
+    return -1;
+}
+
 #ifdef __cplusplus
 }
 #endif

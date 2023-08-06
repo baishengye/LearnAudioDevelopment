@@ -143,6 +143,6 @@ class LameBuilder {
     }
 
     fun initLame() {
-        LameLoader.initialize(this)
+        LameLoader.initializeEncoder(inSampleRate, outChannel, outSampleRate, outBitrate, quality)
     }
 }
