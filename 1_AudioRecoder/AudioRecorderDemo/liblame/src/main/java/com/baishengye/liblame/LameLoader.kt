@@ -33,6 +33,13 @@ object LameLoader {
 
     external fun closeEncoder(): Int
 
+    external fun wav2mp3(wavPath: String, mp3Path: String)
+
+
+    external fun wav2mp3Speed(wavPath: String, mp3Path: String, speed: Int)
+
+    /***********************************************下面解码相关*********************************************************************/
+
     external fun initializeDecoder(): Int
 
     external fun getDecoderSampleRate(): Int

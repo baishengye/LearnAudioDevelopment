@@ -44,6 +44,17 @@ JNIEXPORT jint JNICALL Java_com_baishengye_liblame_LameLoader_flushEncoder
 JNIEXPORT jint JNICALL Java_com_baishengye_liblame_LameLoader_closeEncoder
         (JNIEnv *, jobject);
 
+JNIEXPORT void JNICALL Java_com_baishengye_liblame_LameLoader_wav2mp3(JNIEnv *env, jobject clazz,
+                                                                      jstring wav_path,
+                                                                      jstring mp3_path);
+
+JNIEXPORT void JNICALL
+Java_com_baishengye_liblame_LameLoader_wav2mp3Speed(JNIEnv *env, jobject clazz,
+                                                    jstring wav_path,
+                                                    jstring mp3_path, jint speed);
+
+/********************************************下面解码操作***********************************************************************/
+
 JNIEXPORT jint JNICALL Java_com_baishengye_liblame_LameLoader_initializeDecoder
         (JNIEnv *, jobject);
 

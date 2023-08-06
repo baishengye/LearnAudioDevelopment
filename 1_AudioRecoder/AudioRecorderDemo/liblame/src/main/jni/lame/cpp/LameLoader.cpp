@@ -134,6 +134,58 @@ jint Java_com_baishengye_liblame_LameLoader_closeEncoder
     return -1;
 }
 
+void Java_com_baishengye_liblame_LameLoader_wav2mp3(JNIEnv *env, jobject clazz,
+                                                    jstring wav_path, jstring mp3_path) {
+    const char *wavPath = env->GetStringUTFChars(wav_path, nullptr);
+    const char *mp3Path = env->GetStringUTFChars(mp3_path, nullptr);
+    //open input file and output file
+    FILE *fInput = fopen(wavPath, "rb");
+    FILE *fMp3 = fopen(mp3Path, "wb");
+    short int inputBuffer[baishengye_liblame_LameLoader_MP3_BUFFER_SIZE * 2];
+    unsigned char mp3Buffer[baishengye_liblame_LameLoader_MP3_BUFFER_SIZE];//You must specified at least 7200
+    int read = 0; // number of bytes in inputBuffer, if in the end return 0
+    int write = 0;// number of bytes output in mp3buffer.  can be 0
+    long total = 0; // the bytes of reading input file
+    int nowConvertBytes = 0;
+
+    //convert to mp3
+    do {
+        read = static_cast<int>(fread(inputBuffer, sizeof(short int) * 2,
+                                      baishengye_liblame_LameLoader_MP3_BUFFER_SIZE, fInput));
+        total += read * 2;
+        nowConvertBytes = total;
+        if (read != 0) {
+            write = lame_encode_buffer_interleaved(lame_context, inputBuffer, read, mp3Buffer,
+                                                   baishengye_liblame_LameLoader_MP3_BUFFER_SIZE);
+            //write the converted buffer to the file
+            fwrite(mp3Buffer, sizeof(unsigned char), write, fMp3);
+        }
+        //if in the end flush
+        if (read == 0) {
+            lame_encode_flush(lame_context, mp3Buffer,
+                              baishengye_liblame_LameLoader_MP3_BUFFER_SIZE);
+        }
+    } while (read != 0);
+
+    fclose(fInput);
+    fclose(fMp3);
+    env->ReleaseStringUTFChars(wav_path, wavPath);
+    env->ReleaseStringUTFChars(mp3_path, mp3Path);
+    nowConvertBytes = -1;
+}
+
+void Java_com_baishengye_liblame_LameLoader_wav2mp3Speed(JNIEnv *env, jobject clazz,
+                                                         jstring wav_path,
+                                                         jstring mp3_path, jint speed) {
+    lame_set_out_samplerate(lame_context, lame_get_out_samplerate(lame_context) * speed);
+    lame_init_params(lame_context);
+
+    Java_com_baishengye_liblame_LameLoader_wav2mp3(env, clazz, wav_path, mp3_path);
+}
+
+
+/*****************************************************下面是解码操作******************************************************************************/
+
 
 jint Java_com_baishengye_liblame_LameLoader_initializeDecoder
         (JNIEnv *env, jobject clazz) {
